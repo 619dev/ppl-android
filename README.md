@@ -5,7 +5,7 @@
 > [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite) 的 Android 客户端，使用 Capacitor 8 打包上游 React/TypeScript 前端，并内嵌 Tor。
 
 [![Upstream](https://img.shields.io/badge/上游-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/版本-3.0.3-orange)](package.json)
+[![Version](https://img.shields.io/badge/版本-3.0.4-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## 项目范围
@@ -28,6 +28,7 @@ PaperPhoneLite 3.x **不提供**朋友圈、公开时间线、单聊或群聊语
 
 - APK 内嵌 Guardian Project `tor-android 0.4.8.17.2`，支持 `arm64-v8a`、`armeabi-v7a`、`x86` 和 `x86_64`。
 - 原生 Tor 服务监听本机 SOCKS5 `127.0.0.1:9050`；建立线路后，Android WebView 代理切换到该端口。
+- 直接 Tor 连接 20 秒内无法建立线路时，客户端会从 Tor Project 官方 circumvention settings 接口获取当前 WebTunnel bridge，通过内嵌 IPtProxy/Lyrebird 重启 Tor；上次成功获取的 bridge 可在接口暂时不可用时回退使用。
 - 生产构建只接受规范的 v3 `.onion` 服务地址；Vite 开发模式额外允许回环地址。
 - 原生代理桥拒绝清除 Tor 代理或替换为其他代理。浏览器开发模式不能由 JavaScript 强制代理，不属于受支持的生产发行方式。
 - Tor 可隐藏网络来源，但不能保证绝对匿名，也不能消除设备、账号行为、通知服务或主动披露造成的关联。
@@ -39,7 +40,7 @@ ntfy 是 Android 的保留且必需通知方案。应用从服务端取得专属
 ## 本地数据与密钥
 
 - 上游前端通过 IndexedDB 保存身份密钥和 Sender Key，通过 localStorage 保存会话、设置、消息缓存与离线数据。
-- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.3 前端没有把整个聊天缓存交给 Android Keystore 加密。
+- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.4 前端没有把整个聊天缓存交给 Android Keystore 加密。
 - 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.0 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
 - 清理应用数据或卸载应用可能永久删除本地密钥及无法恢复的历史消息。
 
@@ -49,8 +50,8 @@ ntfy 是 Android 的保留且必需通知方案。应用从服务端取得专属
 |---|---|
 | 应用名称 | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| 版本 | `3.0.3` |
-| Version Code | `30003` |
+| 版本 | `3.0.4` |
+| Version Code | `30004` |
 | 最低 Android API | 24 |
 
 ## 构建

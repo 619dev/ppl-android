@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { get, post, put } from '../api/http'
 import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
-import { ShieldCheck, Lock, Shield, Link, Atom, Server, Wifi, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import { ShieldCheck, Shield, Server, Wifi, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { generateKeyPair, generateSignKeyPair, signMessage, initSodium } from '../crypto/ratchet'
 import { setKeys, getKeys, loadFromIndexedDB } from '../crypto/keystore'
@@ -26,7 +26,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [torState, setTorState] = useState<TorState>({ status: 'OFF', host: '127.0.0.1', port: 9050, ready: false })
+  const [torState, setTorState] = useState<TorState>({ status: 'OFF', host: '127.0.0.1', port: 9050, ready: false, transport: 'direct' })
   const [torStarting, setTorStarting] = useState(false)
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function Login() {
     onTorStatusChange(state => {
       if (disposed) return
       setTorState(state)
-      if (state.ready || state.status === 'OFF') setTorStarting(false)
+      if (state.ready || state.status === 'OFF' || state.status === 'WEBTUNNEL_ERROR') setTorStarting(false)
     }).then(handle => {
       if (disposed) handle?.remove()
       else listener = handle
@@ -342,26 +342,6 @@ export default function Login() {
         <h1 className="login-title">{t('app.name')}</h1>
         <p className="login-subtitle">{t('auth.subtitle')}</p>
 
-        {/* Security Features */}
-        <div className="security-badges">
-          <div className="security-badge">
-            <span className="security-icon"><Lock size={16} /></span>
-            <span className="security-text">{t('security.local_keys')}</span>
-          </div>
-          <div className="security-badge">
-            <span className="security-icon"><Shield size={16} /></span>
-            <span className="security-text">{t('security.e2e')}</span>
-          </div>
-          <div className="security-badge">
-            <span className="security-icon"><Link size={16} /></span>
-            <span className="security-text">{t('security.forward')}</span>
-          </div>
-          <div className="security-badge">
-            <span className="security-icon"><Atom size={16} /></span>
-            <span className="security-text">{t('security.quantum')}</span>
-          </div>
-        </div>
-
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="input-group">
             <div className="server-url-input">
@@ -385,7 +365,15 @@ export default function Login() {
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
                 <Shield size={16} style={{ color: torState.ready ? '#22c55e' : '#f59e0b', flexShrink: 0, marginTop: 1 }} />
-                <span>{torState.ready ? t('tor.ready_detail') : t('tor.required_notice')}</span>
+                <span>{torState.ready
+                  ? `${t('tor.ready_detail')}${torState.transport === 'webtunnel' ? ` · ${t('tor.webtunnel')}` : ''}`
+                  : torState.status === 'FETCHING_WEBTUNNEL'
+                    ? t('tor.fetching_webtunnel')
+                    : torState.status === 'STARTING_WEBTUNNEL'
+                      ? t('tor.starting_webtunnel')
+                      : torState.status === 'WEBTUNNEL_ERROR'
+                        ? t('tor.webtunnel_failed')
+                        : t('tor.required_notice')}</span>
               </div>
               <button
                 type="button"
@@ -395,9 +383,13 @@ export default function Login() {
               >
                 {torState.ready
                   ? <><Check size={16} /> {t('tor.ready')}</>
-                  : (torStarting || torState.status === 'STARTING')
-                    ? t('tor.starting')
-                    : t('tor.start')}
+                  : torState.status === 'FETCHING_WEBTUNNEL'
+                    ? t('tor.fetching_webtunnel')
+                    : torState.status === 'STARTING_WEBTUNNEL'
+                      ? t('tor.starting_webtunnel')
+                      : (torStarting || torState.status === 'STARTING')
+                        ? t('tor.starting')
+                        : t('tor.start')}
               </button>
             </div>
           ) : <>

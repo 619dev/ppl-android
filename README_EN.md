@@ -5,7 +5,7 @@
 > Android client for [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite), packaging the upstream React/TypeScript frontend with Capacitor 8 and a bundled Tor client.
 
 [![Upstream](https://img.shields.io/badge/Upstream-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/Version-3.0.3-orange)](package.json)
+[![Version](https://img.shields.io/badge/Version-3.0.4-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## Scope
@@ -28,6 +28,7 @@ PaperPhoneLite 3.x does **not** provide Moments, a public Timeline, direct or gr
 
 - The APK bundles Guardian Project `tor-android 0.4.8.17.2` for `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64`.
 - The native Tor service exposes SOCKS5 on `127.0.0.1:9050`; the Android WebView proxy switches to it after a Tor circuit is established.
+- If direct Tor cannot establish a circuit within 20 seconds, the client fetches a current WebTunnel bridge from Tor Project's official circumvention-settings endpoint and restarts Tor through bundled IPtProxy/Lyrebird; the last successfully fetched bridge is retained as a temporary fallback.
 - Production builds accept only valid v3 `.onion` server addresses. Vite development additionally permits loopback addresses.
 - The native proxy bridge refuses requests to clear Tor or replace it with another proxy. Browser development cannot enforce a proxy from JavaScript and is not a supported production distribution.
 - Tor can conceal network origin, but cannot guarantee absolute anonymity or prevent correlation through a device, account behavior, notification provider, or voluntary disclosure.
@@ -39,7 +40,7 @@ ntfy is the retained and required Android notification path. The app obtains a d
 ## Local Data and Keys
 
 - The upstream frontend stores identity keys and Sender Keys in IndexedDB, while sessions, settings, message caches, and offline data use localStorage.
-- Decrypted message fields are removed before message-cache persistence, but the current 3.0.3 frontend does not encrypt the entire chat cache with Android Keystore.
+- Decrypted message fields are removed before message-cache persistence, but the current 3.0.4 frontend does not encrypt the entire chat cache with Android Keystore.
 - Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.0 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
 - Clearing app data or uninstalling the app can permanently remove local keys and unrecoverable history.
 
@@ -49,8 +50,8 @@ ntfy is the retained and required Android notification path. The app obtains a d
 |---|---|
 | App name | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| Version | `3.0.3` |
-| Version code | `30003` |
+| Version | `3.0.4` |
+| Version code | `30004` |
 | Minimum Android API | 24 |
 
 ## Build

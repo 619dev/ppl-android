@@ -4,6 +4,22 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.4 — 2026-08-18
+
+- Tor 直连 20 秒内无法建立线路时，自动从 Tor Project 官方 circumvention settings 接口获取当前推荐的 WebTunnel bridge，并通过内嵌 IPtProxy/Lyrebird 重试启动。
+- 缓存上次成功获取的 WebTunnel bridge，补充 45 秒启动超时、失败重试和登录页实时状态提示；登录与注册仍只在 Tor 和 WebView 代理就绪后开放。
+- 使用上游 PaperPhoneLite 官方青绿色电话图标，重新生成 Android 启动器、自适应图标和启动画面资源，并将整体界面强调色调整为与图标一致的青绿色。
+- 移除登录页“密钥只保存在本地、端到端加密、前向加密、抗量子加密”四个提示卡片。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.4`（`versionCode 30004`）。
+
+- When direct Tor cannot establish a circuit within 20 seconds, the app now fetches a currently recommended WebTunnel bridge from Tor Project's official circumvention-settings endpoint and retries through bundled IPtProxy/Lyrebird.
+- The last successfully fetched WebTunnel bridge is cached, with a 45-second startup timeout, retry handling, and live login-page status messages; login and registration remain gated until Tor and the WebView proxy are ready.
+- Adopted the official teal PaperPhoneLite telephone icon from upstream, regenerated Android launcher, adaptive-icon, and splash resources, and aligned the interface accent palette with the icon.
+- Removed the four login-page cards for local-only keys, end-to-end encryption, forward secrecy, and post-quantum encryption.
+- Updated npm, Android native, and Profile-footer versions to `3.0.4` (`versionCode 30004`).
+
+---
+
 ## 3.0.3 — 2026-08-18
 
 - Android 登录页新增内嵌 Tor 启动按钮和实时状态显示。
