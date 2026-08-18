@@ -104,6 +104,27 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         const supported = await BarcodeScanner.isSupported()
         if (!supported.supported) throw new Error('QR scanning is not supported on this device')
 
+        // Prefer the ready-to-use native scanner. It is presented above the
+        // WebView, so the app UI cannot cover the camera preview.
+        const module = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()
+        if (module.available) {
+          const result = await BarcodeScanner.scan({
+            formats: [BarcodeFormat.QrCode],
+            autoZoom: true,
+          })
+          if (!active) return
+          const value = result.barcodes.find(barcode => barcode.rawValue)?.rawValue
+          if (value) {
+            active = false
+            onScan(value)
+          } else {
+            onClose()
+          }
+          return
+        }
+
+        // Devices without the Google scanner module use the bundled CameraX
+        // preview behind a fully transparent WebView.
         let permission = await BarcodeScanner.checkPermissions()
         if (permission.camera !== 'granted') {
           permission = await BarcodeScanner.requestPermissions()
@@ -129,7 +150,12 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         await BarcodeScanner.startScan({ formats: [BarcodeFormat.QrCode] })
       } catch (err: any) {
         await stopNativeScanner()
-        if (active) setError(err.message || 'Cannot access camera')
+        if (!active) return
+        if (String(err?.message || '').toLowerCase().includes('canceled')) {
+          onClose()
+        } else {
+          setError(err.message || 'Cannot access camera')
+        }
       }
     }
 

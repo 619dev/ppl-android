@@ -4,6 +4,20 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.7 — 2026-08-18
+
+- 修复“扫一扫”启动后只显示应用界面和扫描框、没有可见摄像头画面的问题。
+- Android 优先使用 ML Kit 完整原生扫码界面直接调用摄像头；缺少 Google 扫码模块时回退到 CameraX 内嵌扫描。
+- 回退模式会隐藏其余 WebView 界面并保持扫描页透明，同时完善取消、识别结果及扫描资源清理流程。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.7`（`versionCode 30007`）。
+
+- Fixed QR scanning opening over the app UI without a visible camera preview.
+- Android now prefers ML Kit's full native scanner UI to invoke the camera directly, with embedded CameraX scanning as a fallback when the Google scanner module is unavailable.
+- The fallback hides the remaining WebView UI and keeps the scanner page transparent, with improved cancellation, result handling, and scanner cleanup.
+- Updated npm, Android native, and Profile-footer versions to `3.0.7` (`versionCode 30007`).
+
+---
+
 ## 3.0.6 — 2026-08-18
 
 - 修复 Android 打开“扫一扫”时可能因 WebView 相机接口崩溃的问题，改用与 Capacitor 8 兼容的原生 ML Kit 二维码扫描。
