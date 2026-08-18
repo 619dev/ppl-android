@@ -139,6 +139,17 @@ body {
   overflow: hidden;
 }
 
+/* Native ML Kit renders the camera behind the WebView while scanning. */
+body.barcode-scanner-active,
+body.barcode-scanner-active #root,
+body.barcode-scanner-active #discover-page {
+  background: transparent !important;
+}
+
+body.barcode-scanner-active #discover-page > :not(.native-qr-scanner) {
+  visibility: hidden !important;
+}
+
 #root {
   display: flex;
   flex-direction: column;

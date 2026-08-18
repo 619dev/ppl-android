@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning'
 import QRCode from 'qrcode'
 
 /**
@@ -72,6 +74,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [error, setError] = useState('')
+  const useNativeScanner = Capacitor.getPlatform() === 'android'
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach(track => track.stop())
@@ -87,6 +90,48 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
   useEffect(() => {
     let active = true
     let animFrame: number
+    let nativeListener: Awaited<ReturnType<typeof BarcodeScanner.addListener>> | null = null
+
+    const stopNativeScanner = async () => {
+      document.body.classList.remove('barcode-scanner-active')
+      await nativeListener?.remove().catch(() => {})
+      nativeListener = null
+      await BarcodeScanner.stopScan().catch(() => {})
+    }
+
+    const startNativeScanner = async () => {
+      try {
+        const supported = await BarcodeScanner.isSupported()
+        if (!supported.supported) throw new Error('QR scanning is not supported on this device')
+
+        let permission = await BarcodeScanner.checkPermissions()
+        if (permission.camera !== 'granted') {
+          permission = await BarcodeScanner.requestPermissions()
+        }
+        if (permission.camera !== 'granted') throw new Error('Camera permission is required')
+        if (!active) return
+
+        document.body.classList.add('barcode-scanner-active')
+        let completed = false
+        nativeListener = await BarcodeScanner.addListener('barcodesScanned', async event => {
+          if (!active || completed) return
+          const value = event.barcodes.find(barcode => barcode.rawValue)?.rawValue
+          if (!value) return
+          completed = true
+          active = false
+          await stopNativeScanner()
+          onScan(value)
+        })
+        if (!active) {
+          await stopNativeScanner()
+          return
+        }
+        await BarcodeScanner.startScan({ formats: [BarcodeFormat.QrCode] })
+      } catch (err: any) {
+        await stopNativeScanner()
+        if (active) setError(err.message || 'Cannot access camera')
+      }
+    }
 
     const start = async () => {
       try {
@@ -139,19 +184,21 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       }
     }
 
-    start()
+    if (useNativeScanner) startNativeScanner()
+    else start()
 
     return () => {
       active = false
       cancelAnimationFrame(animFrame)
       stopCamera()
+      void stopNativeScanner()
     }
-  }, [])
+  }, [useNativeScanner])
 
   return (
-    <div style={{
+    <div className={useNativeScanner ? 'native-qr-scanner' : undefined} style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: '#000', display: 'flex', flexDirection: 'column',
+      background: useNativeScanner ? 'transparent' : '#000', display: 'flex', flexDirection: 'column',
     }}>
       <div style={{
         padding: '12px 16px', display: 'flex', alignItems: 'center',
@@ -168,9 +215,9 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       </div>
 
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <video ref={videoRef} style={{
+        {!useNativeScanner && <video ref={videoRef} style={{
           width: '100%', height: '100%', objectFit: 'cover',
-        }} playsInline muted />
+        }} playsInline muted />}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
         {/* Scan frame overlay */}

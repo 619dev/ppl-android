@@ -4,6 +4,22 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.6 — 2026-08-18
+
+- 修复 Android 打开“扫一扫”时可能因 WebView 相机接口崩溃的问题，改用与 Capacitor 8 兼容的原生 ML Kit 二维码扫描。
+- 增加相机权限、设备支持检查、扫码关闭及监听器清理；浏览器环境保留 Web 扫码回退，Android 最低 API 仍为 24。
+- 更新隐私政策和使用条款，明确 iOS 不使用 APNs、当前不提供系统后台远程通知；Android 可选择通过 ntfy 接收后台通知。
+- 明确 Android 与 iOS 均不集成 APNs、FCM、Firebase、OneSignal 或 Web Push，并修正通知数据处理与保留范围的表述。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.6`（`versionCode 30006`）。
+
+- Fixed a crash that could occur when opening QR scanning on Android by replacing WebView camera capture with native ML Kit QR scanning compatible with Capacitor 8.
+- Added camera-permission and device-support checks plus safe scanner/listener cleanup; browsers retain the web fallback, and Android minimum API remains 24.
+- Updated the Privacy Policy and Terms of Use to state that iOS does not use APNs and currently has no system background remote notifications; Android can optionally use ntfy for background notifications.
+- Clarified that neither Android nor iOS integrates APNs, FCM, Firebase, OneSignal, or Web Push, and corrected notification-data processing and retention wording.
+- Updated npm, Android native, and Profile-footer versions to `3.0.6` (`versionCode 30006`).
+
+---
+
 ## 3.0.5 — 2026-08-18
 
 - 修复内嵌 Tor 已就绪后，登录和注册访问 `http://` v3 onion 服务仍显示 `Failed to fetch` 的问题。
