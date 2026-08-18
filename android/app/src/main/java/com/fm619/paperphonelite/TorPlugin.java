@@ -1,4 +1,4 @@
-package com.fm619.paperphoneplus;
+package com.fm619.paperphonelite;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;

@@ -1,4 +1,4 @@
-package com.fm619.paperphoneplus;
+package com.fm619.paperphonelite;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

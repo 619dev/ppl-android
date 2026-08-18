@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.fm619.paperphoneplus',
-  appName: 'PaperPhonePlus',
+  appId: 'com.fm619.paperphonelite',
+  appName: 'PaperPhoneLite',
   webDir: 'dist',
   server: {
     // HTTPS scheme is required for WebRTC getUserMedia() and crypto.subtle
@@ -22,9 +22,6 @@ const config: CapacitorConfig = {
       splashFullScreen: true,
       splashImmersive: true,
       backgroundColor: '#1a1a2e',
-    },
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
     },
   },
   android: {

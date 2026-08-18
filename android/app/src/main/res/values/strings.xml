@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">PaperPhonePlus</string>
-    <string name="title_activity_main">PaperPhonePlus</string>
-    <string name="package_name">com.fm619.paperphoneplus</string>
-    <string name="custom_url_scheme">com.fm619.paperphoneplus</string>
+    <string name="app_name">PaperPhoneLite</string>
+    <string name="title_activity_main">PaperPhoneLite</string>
+    <string name="package_name">com.fm619.paperphonelite</string>
+    <string name="custom_url_scheme">com.fm619.paperphonelite</string>
 </resources>
