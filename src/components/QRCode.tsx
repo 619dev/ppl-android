@@ -93,6 +93,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
     let nativeListener: Awaited<ReturnType<typeof BarcodeScanner.addListener>> | null = null
 
     const stopNativeScanner = async () => {
+      document.documentElement.classList.remove('barcode-scanner-active')
       document.body.classList.remove('barcode-scanner-active')
       await nativeListener?.remove().catch(() => {})
       nativeListener = null
@@ -104,27 +105,9 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         const supported = await BarcodeScanner.isSupported()
         if (!supported.supported) throw new Error('QR scanning is not supported on this device')
 
-        // Prefer the ready-to-use native scanner. It is presented above the
-        // WebView, so the app UI cannot cover the camera preview.
-        const module = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()
-        if (module.available) {
-          const result = await BarcodeScanner.scan({
-            formats: [BarcodeFormat.QrCode],
-            autoZoom: true,
-          })
-          if (!active) return
-          const value = result.barcodes.find(barcode => barcode.rawValue)?.rawValue
-          if (value) {
-            active = false
-            onScan(value)
-          } else {
-            onClose()
-          }
-          return
-        }
-
-        // Devices without the Google scanner module use the bundled CameraX
-        // preview behind a fully transparent WebView.
+        // Use the app-owned CameraX scanner. The Google scanner UI asks for a
+        // separate Google Play services camera permission, which can remain
+        // denied even after the user grants PaperPhoneLite camera access.
         let permission = await BarcodeScanner.checkPermissions()
         if (permission.camera !== 'granted') {
           permission = await BarcodeScanner.requestPermissions()
@@ -132,6 +115,9 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         if (permission.camera !== 'granted') throw new Error('Camera permission is required')
         if (!active) return
 
+        // Both the document and WebView content must be transparent because
+        // the native CameraX preview is inserted behind Capacitor's WebView.
+        document.documentElement.classList.add('barcode-scanner-active')
         document.body.classList.add('barcode-scanner-active')
         let completed = false
         nativeListener = await BarcodeScanner.addListener('barcodesScanned', async event => {

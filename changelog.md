@@ -4,6 +4,20 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.8 — 2026-08-18
+
+- 修复已授予 PaperPhoneLite 摄像头权限后，扫码仍要求为 Google Play 服务单独授予摄像头权限的问题。
+- 移除 Google Play 服务原生扫码界面及 `barcode_ui` 模块声明，统一使用应用自身权限控制的 CameraX 扫描。
+- 补充 HTML 根层透明状态，避免 Capacitor WebView 背景遮挡位于其后的原生摄像头预览。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.8`（`versionCode 30008`）。
+
+- Fixed scanning still requesting separate Google Play services camera access after PaperPhoneLite itself had already been granted camera permission.
+- Removed the Google Play services scanner UI and `barcode_ui` module declaration; scanning now consistently uses app-permission-controlled CameraX.
+- Made the HTML root transparent during scanning so the Capacitor WebView cannot cover the native camera preview behind it.
+- Updated npm, Android native, and Profile-footer versions to `3.0.8` (`versionCode 30008`).
+
+---
+
 ## 3.0.7 — 2026-08-18
 
 - 修复“扫一扫”启动后只显示应用界面和扫描框、没有可见摄像头画面的问题。
