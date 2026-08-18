@@ -25,8 +25,10 @@ const config: CapacitorConfig = {
     },
   },
   android: {
-    // Allow mixed content for development (disable in production if needed)
-    allowMixedContent: false,
+    // The secure Capacitor origin (https://localhost) must be allowed to call
+    // http:// v3 onion services. Onion services are authenticated and
+    // encrypted by Tor itself; production URL validation remains onion-only.
+    allowMixedContent: true,
   },
   ios: {
     contentInset: 'automatic',

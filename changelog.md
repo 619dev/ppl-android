@@ -4,6 +4,20 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.5 — 2026-08-18
+
+- 修复内嵌 Tor 已就绪后，登录和注册访问 `http://` v3 onion 服务仍显示 `Failed to fetch` 的问题。
+- 允许运行于安全 Capacitor 源的 Android WebView 承载 HTTP onion 请求，并允许该请求进入内嵌 Tor SOCKS 代理；onion 服务的认证与链路加密仍由 Tor 提供。
+- 生产环境继续只接受规范的 v3 `.onion` 服务地址，拒绝明网地址和清除或替换内嵌 Tor 代理。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.5`（`versionCode 30005`）。
+
+- Fixed `Failed to fetch` during login and registration against `http://` v3 onion services after bundled Tor had become ready.
+- Allowed the Android WebView running from the secure Capacitor origin to carry HTTP onion requests into the bundled Tor SOCKS proxy; Tor continues to provide onion-service authentication and link encryption.
+- Production builds remain restricted to valid v3 `.onion` server addresses and still reject clearnet servers or attempts to clear or replace the bundled Tor proxy.
+- Updated npm, Android native, and Profile-footer versions to `3.0.5` (`versionCode 30005`).
+
+---
+
 ## 3.0.4 — 2026-08-18
 
 - Tor 直连 20 秒内无法建立线路时，自动从 Tor Project 官方 circumvention settings 接口获取当前推荐的 WebTunnel bridge，并通过内嵌 IPtProxy/Lyrebird 重试启动。
