@@ -5,7 +5,7 @@
 > [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite) 的 Android 客户端，使用 Capacitor 8 打包上游 React/TypeScript 前端，并内嵌 Tor。
 
 [![Upstream](https://img.shields.io/badge/上游-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/版本-3.0.2-orange)](package.json)
+[![Version](https://img.shields.io/badge/版本-3.0.3-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## 项目范围
@@ -39,7 +39,7 @@ ntfy 是 Android 的保留且必需通知方案。应用从服务端取得专属
 ## 本地数据与密钥
 
 - 上游前端通过 IndexedDB 保存身份密钥和 Sender Key，通过 localStorage 保存会话、设置、消息缓存与离线数据。
-- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.2 前端没有把整个聊天缓存交给 Android Keystore 加密。
+- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.3 前端没有把整个聊天缓存交给 Android Keystore 加密。
 - 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.0 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
 - 清理应用数据或卸载应用可能永久删除本地密钥及无法恢复的历史消息。
 
@@ -49,8 +49,8 @@ ntfy 是 Android 的保留且必需通知方案。应用从服务端取得专属
 |---|---|
 | 应用名称 | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| 版本 | `3.0.2` |
-| Version Code | `30002` |
+| 版本 | `3.0.3` |
+| Version Code | `30003` |
 | 最低 Android API | 24 |
 
 ## 构建

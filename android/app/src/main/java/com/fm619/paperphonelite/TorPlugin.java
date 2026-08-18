@@ -31,6 +31,7 @@ public class TorPlugin extends Plugin {
     private static final int SOCKS_PORT = 9050;
 
     private String status = TorService.STATUS_OFF;
+    private boolean proxyReady;
     private boolean receiverRegistered;
     private boolean serviceBound;
 
@@ -43,13 +44,12 @@ public class TorPlugin extends Plugin {
             String nextStatus = intent.getStringExtra(TorService.EXTRA_STATUS);
             if (nextStatus == null) return;
             status = nextStatus;
-            if (TorService.STATUS_ON.equals(status)) applyTorProxy();
-
-            JSObject event = new JSObject();
-            event.put("status", status);
-            event.put("host", "127.0.0.1");
-            event.put("port", SOCKS_PORT);
-            notifyListeners("statusChange", event);
+            proxyReady = false;
+            if (TorService.STATUS_ON.equals(status)) {
+                applyTorProxy();
+            } else {
+                notifyStatusChange();
+            }
         }
     };
 
@@ -70,10 +70,10 @@ public class TorPlugin extends Plugin {
     @Override
     public void load() {
         super.load();
-        startEmbeddedTor();
+        registerStatusReceiver();
     }
 
-    private void startEmbeddedTor() {
+    private void registerStatusReceiver() {
         Context context = getContext();
         TorService.setBroadcastPackageName(context.getPackageName());
         if (!receiverRegistered) {
@@ -85,9 +85,17 @@ public class TorPlugin extends Plugin {
             );
             receiverRegistered = true;
         }
+    }
+
+    private void startEmbeddedTor() {
+        Context context = getContext();
+        registerStatusReceiver();
         if (!serviceBound) {
             Intent intent = new Intent(context, TorService.class);
             intent.setAction(TorService.ACTION_START);
+            // Starting the service requests its current status as well. This is
+            // important when Tor survived an Activity/WebView recreation.
+            context.startService(intent);
             serviceBound = context.bindService(intent, connection, Context.BIND_AUTO_CREATE);
         }
     }
@@ -104,8 +112,17 @@ public class TorPlugin extends Plugin {
         ProxyController.getInstance().setProxyOverride(
                 config,
                 executor,
-                () -> Log.i(TAG, "WebView is routed through embedded Tor")
+                () -> {
+                    proxyReady = true;
+                    Log.i(TAG, "WebView is routed through embedded Tor");
+                    notifyStatusChange();
+                }
         );
+    }
+
+    private void notifyStatusChange() {
+        JSObject event = statusResult();
+        notifyListeners("statusChange", event);
     }
 
     @PluginMethod
@@ -124,6 +141,7 @@ public class TorPlugin extends Plugin {
         result.put("status", status);
         result.put("host", "127.0.0.1");
         result.put("port", SOCKS_PORT);
+        result.put("ready", TorService.STATUS_ON.equals(status) && proxyReady);
         return result;
     }
 

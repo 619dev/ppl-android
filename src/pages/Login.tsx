@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { get, post, put } from '../api/http'
 import { useStore } from '../store'
@@ -8,6 +8,7 @@ import { allLangs, langNames, LangCode } from '../i18n'
 import { generateKeyPair, generateSignKeyPair, signMessage, initSodium } from '../crypto/ratchet'
 import { setKeys, getKeys, loadFromIndexedDB } from '../crypto/keystore'
 import { clearAllSenderKeys } from '../crypto/groupCrypto'
+import { getTorStatus, isNativeAndroid, onTorStatusChange, startTor, type TorState } from '../api/tor-bridge'
 
 export default function Login() {
   const { t } = useI18n()
@@ -25,6 +26,44 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [torState, setTorState] = useState<TorState>({ status: 'OFF', host: '127.0.0.1', port: 9050, ready: false })
+  const [torStarting, setTorStarting] = useState(false)
+
+  useEffect(() => {
+    if (!isNativeAndroid) return
+    let disposed = false
+    let listener: Awaited<ReturnType<typeof onTorStatusChange>> = null
+
+    getTorStatus().then(state => {
+      if (!disposed) setTorState(state)
+    }).catch(() => {})
+    onTorStatusChange(state => {
+      if (disposed) return
+      setTorState(state)
+      if (state.ready || state.status === 'OFF') setTorStarting(false)
+    }).then(handle => {
+      if (disposed) handle?.remove()
+      else listener = handle
+    }).catch(() => {})
+
+    return () => {
+      disposed = true
+      listener?.remove()
+    }
+  }, [])
+
+  const handleStartTor = async () => {
+    setError('')
+    setTorStarting(true)
+    setTorState(prev => ({ ...prev, status: 'STARTING', ready: false }))
+    try {
+      const state = await startTor()
+      setTorState(state)
+    } catch (err: any) {
+      setTorStarting(false)
+      setError(err.message || t('tor.start_failed'))
+    }
+  }
 
   // Proxy state (list-based)
   const proxyList = useStore(s => s.proxyList)
@@ -176,6 +215,11 @@ export default function Login() {
     setLoading(true)
 
     try {
+      if (isNativeAndroid && !torState.ready) {
+        setError(t('tor.required_before_auth'))
+        setLoading(false)
+        return
+      }
       if (!agreedToTerms) {
         setError(t('terms.must_agree'))
         setLoading(false)
@@ -332,6 +376,31 @@ export default function Login() {
             </div>
           </div>
 
+          {isNativeAndroid ? (
+            <div style={{
+              display: 'flex', flexDirection: 'column', gap: 10,
+              padding: '12px', borderRadius: 12,
+              background: torState.ready ? 'rgba(34,197,94,0.10)' : 'rgba(245,158,11,0.10)',
+              border: `1px solid ${torState.ready ? 'rgba(34,197,94,0.30)' : 'rgba(245,158,11,0.28)'}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
+                <Shield size={16} style={{ color: torState.ready ? '#22c55e' : '#f59e0b', flexShrink: 0, marginTop: 1 }} />
+                <span>{torState.ready ? t('tor.ready_detail') : t('tor.required_notice')}</span>
+              </div>
+              <button
+                type="button"
+                className={`btn btn-full ${torState.ready ? '' : 'btn-primary'}`}
+                onClick={handleStartTor}
+                disabled={torStarting || torState.status === 'STARTING' || torState.ready}
+              >
+                {torState.ready
+                  ? <><Check size={16} /> {t('tor.ready')}</>
+                  : (torStarting || torState.status === 'STARTING')
+                    ? t('tor.starting')
+                    : t('tor.start')}
+              </button>
+            </div>
+          ) : <>
           <div style={{
             display: 'flex', alignItems: 'flex-start', gap: 8,
             padding: '10px 12px', borderRadius: 10,
@@ -585,6 +654,7 @@ export default function Login() {
               )}
             </div>
           )}
+          </>}
 
           <div className="input-group">
             <input
@@ -619,7 +689,7 @@ export default function Login() {
 
           {error && <div style={{ color: 'var(--danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
 
-          <button className="btn btn-primary btn-full" type="submit" id="submit-btn" disabled={loading}>
+          <button className="btn btn-primary btn-full" type="submit" id="submit-btn" disabled={loading || (isNativeAndroid && !torState.ready)}>
             {loading
               ? (isRegister ? t('auth.registering') : t('auth.logging_in'))
               : (isRegister ? t('auth.register') : t('auth.login'))

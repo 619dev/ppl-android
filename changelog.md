@@ -4,6 +4,24 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.3 — 2026-08-18
+
+- Android 登录页新增内嵌 Tor 启动按钮和实时状态显示。
+- 登录和注册现在必须等待 Tor 建立线路且 WebView 代理成功切换到内嵌 Tor 后才能提交。
+- Android 登录页移除容易误导的 `127.0.0.1:7890/10808` 手动代理选择；系统 VPN 可直接承载 Tor 的外连流量。
+- Tor 不再随原生插件加载自动启动，并修复 Activity/WebView 重建后恢复 Tor 状态的流程。
+- 为全部 8 种界面语言补充 Tor 启动、就绪和失败提示。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.3`（`versionCode 30003`）。
+
+- Added an explicit bundled-Tor start button and live status display to the Android login page.
+- Login and registration now remain disabled until Tor establishes a circuit and the WebView proxy is successfully routed through bundled Tor.
+- Removed the misleading `127.0.0.1:7890/10808` manual proxy selector from Android login; a system VPN may carry Tor's outbound traffic transparently.
+- Tor no longer starts automatically when the native plugin loads, and Tor state is restored after Activity/WebView recreation.
+- Added Tor starting, ready, and failure messages in all eight UI languages.
+- Updated npm, Android native, and Profile-footer versions to `3.0.3` (`versionCode 30003`).
+
+---
+
 ## 3.0.2 — 2026-08-18
 
 - Application ID、Gradle namespace、Capacitor appId、Java 包名、资源包名和自定义 scheme 统一更正为 `com.fm619.paperphonelite`。
