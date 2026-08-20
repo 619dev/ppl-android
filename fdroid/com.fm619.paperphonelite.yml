@@ -7,7 +7,6 @@ SourceCode: https://github.com/619dev/ppl-android
 IssueTracker: https://github.com/619dev/ppl-android/issues
 
 AutoName: PaperPhoneLite
-Summary: Encrypted messaging over self-hosted Tor onion services
 Description: |-
   PaperPhoneLite is a client for private messaging through a self-hosted
   PaperPhoneLite onion service. It bundles Tor and supports private and group
@@ -33,12 +32,7 @@ Builds:
       - echo "d36e56998220085782c0ca965f9d51b7726335aed2f5fc7321c6c0ad233aa96d node.tar.gz"
         | sha256sum -c -
       - tar xzf node.tar.gz --strip-components=1 -C /usr/local/
-    init:
-      - |
-        cd ../..
-        npm ci
-        npm run build
-        npx cap sync android --deployment
+    init: cd ../.. && npm ci && npm run build && npx cap sync android --deployment
     gradle:
       - yes
     output: build/outputs/apk/release/app-release-unsigned.apk
