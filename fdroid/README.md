@@ -43,10 +43,43 @@ emulator or device. Also run `./gradlew lintRelease`.
 The repository contains `fastlane/metadata/android/en-US` and `zh-CN` listing
 text after this preparation. Before submission, add at least two real phone
 screenshots under each locale's `images/phoneScreenshots/` directory. Capture
-them from this exact release without private server addresses, account names,
-message content, QR codes, or notification topics.
+them from this exact release without private server addresses, real account
+names, private message content, QR codes, or notification topics. Clearly
+fictional demo identities and content are acceptable.
 
-## 4. Submit to fdroiddata
+## 4. Choose the submission route
+
+F-Droid currently provides two routes for a new app:
+
+- **Request For Packaging (RFP):** open an issue in
+  `https://gitlab.com/fdroid/rfp/-/issues/new` using the official `Default`
+  template. This triggers an automated review and puts the app in the packaging
+  queue, but does not guarantee that somebody will package it. A pre-filled
+  draft for this app is available at `fdroid/RFP.md`.
+- **Direct fdroiddata merge request:** if you are packaging the app yourself,
+  submit the completed build metadata directly. This is the faster route once
+  the build has been reproduced successfully. An RFP issue is not a required
+  prerequisite for this route.
+
+For a first submission, opening the RFP is useful even if a direct merge
+request will follow: it runs the issuebot checks and leaves a public record of
+the initial review. Link the RFP from the later merge request and close it when
+the app is accepted.
+
+## 5. Open the RFP
+
+1. Confirm that PaperPhoneLite is not already present in `fdroiddata` and that
+   no open or closed RFP already exists for application ID
+   `com.fm619.paperphonelite`.
+2. Open a new issue at `https://gitlab.com/fdroid/rfp/-/issues/new`, select the
+   `Default` description template, and paste/update `fdroid/RFP.md`.
+3. Check only statements that are currently true. In particular, do not check
+   the Fastlane-assets item until the required screenshots have been added.
+4. Submit the issue and wait for issuebot's report. Address any reported
+   licensing, dependency, tracker, build, or metadata problems before opening
+   the direct merge request.
+
+## 6. Submit to fdroiddata
 
 1. Create a GitLab account, fork `https://gitlab.com/fdroid/fdroiddata`, and
    clone your fork.
@@ -73,7 +106,7 @@ fdroid build com.fm619.paperphonelite
    the branch, and open a merge request against `fdroid/fdroiddata:master`.
    Complete its new-app checklist and monitor both CI and reviewer comments.
 
-## 5. Future releases
+## 7. Future releases
 
 For every release, update `package.json`, `android/app/build.gradle`, visible
 in-app version text, and changelog together. Increase `versionCode`, commit,
