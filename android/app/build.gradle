@@ -16,17 +16,28 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    signingConfigs {
-        release {
-            storeFile file('../../paperphone-release.keystore')
-            storePassword System.getenv('KEYSTORE_PASSWORD') ?: 'paperphone2024'
-            keyAlias 'paperphone'
-            keyPassword System.getenv('KEY_PASSWORD') ?: 'paperphone2024'
+    def releaseKeystore = rootProject.file('../paperphone-release.keystore')
+    def releaseStorePassword = System.getenv('KEYSTORE_PASSWORD')
+    def releaseKeyPassword = System.getenv('KEY_PASSWORD')
+    def canSignRelease = releaseKeystore.exists() && releaseStorePassword && releaseKeyPassword
+
+    if (canSignRelease) {
+        signingConfigs {
+            release {
+                storeFile releaseKeystore
+                storePassword releaseStorePassword
+                keyAlias 'paperphone'
+                keyPassword releaseKeyPassword
+            }
         }
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            // F-Droid builds and signs the APK itself. Local/GitHub releases are
+            // signed only when the keystore and both password variables exist.
+            if (canSignRelease) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

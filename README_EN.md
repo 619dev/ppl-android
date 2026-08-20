@@ -77,7 +77,9 @@ cd android
 ./gradlew clean assembleRelease
 ```
 
-The release APK is written to `android/app/build/outputs/apk/release/app-release.apk`. Official Android APKs are distributed only through this repository's [GitHub Releases](https://github.com/619dev/ppl-android/releases), not Google Play.
+The release APK is written to `android/app/build/outputs/apk/release/app-release.apk`. Official Android APKs are distributed through this repository's [GitHub Releases](https://github.com/619dev/ppl-android/releases), with an F-Droid submission planned; the app is not published on Google Play. F-Droid signs its build with a separate key, so F-Droid and GitHub Release APKs cannot upgrade each other in place.
+
+See [`fdroid/README.md`](fdroid/README.md) for the submission and verification procedure and [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml) for the candidate build metadata.
 
 ## Upstream Synchronization
 

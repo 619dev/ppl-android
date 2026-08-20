@@ -77,7 +77,9 @@ cd android
 ./gradlew clean assembleRelease
 ```
 
-Release APK 位于 `android/app/build/outputs/apk/release/app-release.apk`。正式 Android APK 仅发布到本仓库的 [GitHub Releases](https://github.com/619dev/ppl-android/releases)，不发布到 Google Play。
+Release APK 位于 `android/app/build/outputs/apk/release/app-release.apk`。正式 Android APK 发布到本仓库的 [GitHub Releases](https://github.com/619dev/ppl-android/releases)，并计划提交至 F-Droid；不发布到 Google Play。F-Droid 会使用自己的密钥签名，因此其 APK 与 GitHub Release APK 不能互相覆盖安装。
+
+F-Droid 提交与验证流程见 [`fdroid/README.md`](fdroid/README.md)，候选构建元数据见 [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml)。
 
 ## 与上游同步
 

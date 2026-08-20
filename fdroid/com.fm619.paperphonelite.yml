@@ -1,0 +1,47 @@
+Categories:
+  - Internet
+License: AGPL-3.0-only
+AuthorName: 619dev
+WebSite: https://github.com/619dev/PaperPhoneLite
+SourceCode: https://github.com/619dev/ppl-android
+IssueTracker: https://github.com/619dev/ppl-android/issues
+
+AutoName: PaperPhoneLite
+Summary: Encrypted messaging over self-hosted Tor onion services
+Description: |-
+  PaperPhoneLite is a client for private messaging through a self-hosted
+  PaperPhoneLite onion service. It bundles Tor and supports private and group
+  chats, attachments, local offline data, disappearing messages, safety
+  numbers, and optional ntfy notifications.
+
+  A compatible self-hosted server is required. The app does not include
+  Google Play services, Firebase, advertising, or analytics.
+
+RepoType: git
+Repo: https://github.com/619dev/ppl-android.git
+
+Builds:
+  - versionName: 3.0.8
+    versionCode: 30008
+    commit: v3.0.8
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y npm openjdk-21-jdk-headless
+      - update-java-alternatives -a
+    init:
+      - cd ../.. && npm ci
+      - cd ../.. && npm run build
+      - cd ../.. && npx cap sync android --deployment
+    gradle:
+      - yes
+    output: build/outputs/apk/release/app-release-unsigned.apk
+    scanignore:
+      - node_modules/@capacitor/cli/assets/capacitor-cordova-android-plugins.tar.gz
+    scandelete:
+      - node_modules
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+CurrentVersion: 3.0.8
+CurrentVersionCode: 30008
