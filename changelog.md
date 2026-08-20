@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.11 — 2026-08-20
+
+- 为 F-Droid 上架补充中英文 Fastlane 手机截图和预填的 RFP 材料。
+- 将 F-Droid 官网字段统一为 `https://paperphone.app`。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.11`（`versionCode 30011`）。
+
+- Added English and Chinese Fastlane phone screenshots and a pre-filled RFP draft for the F-Droid submission.
+- Standardized the F-Droid website field on `https://paperphone.app`.
+- Updated npm, Android native, and Profile-footer versions to `3.0.11` (`versionCode 30011`).
+
+---
+
 ## 3.0.10 — 2026-08-20
 
 - 移除依赖 Google ML Kit/Play Services 的原生扫码插件，改用 WebView 摄像头与内置开源 `jsQR` 解码，满足 F-Droid 纯自由软件要求。

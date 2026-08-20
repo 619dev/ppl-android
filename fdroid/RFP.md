@@ -19,7 +19,7 @@ AuthorName: 619dev
 AuthorEmail:
 AuthorWebSite: https://github.com/619dev
 
-WebSite: https://github.com/619dev/PaperPhoneLite
+WebSite: https://paperphone.app
 SourceCode: https://github.com/619dev/ppl-android
 IssueTracker: https://github.com/619dev/ppl-android/issues
 
