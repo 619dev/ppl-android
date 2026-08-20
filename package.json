@@ -1,7 +1,7 @@
 {
   "name": "paperphone-lite-android",
   "private": true,
-  "version": "3.0.9",
+  "version": "3.0.10",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@capacitor-mlkit/barcode-scanning": "^8.1.0",
     "@capacitor/android": "^8.3.1",
     "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.3.1",

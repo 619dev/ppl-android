@@ -21,9 +21,9 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 
 Builds:
-  - versionName: 3.0.9
-    versionCode: 30009
-    commit: v3.0.9
+  - versionName: 3.0.10
+    versionCode: 30010
+    commit: v3.0.10
     subdir: android/app
     sudo:
       - apt-get update
@@ -43,11 +43,12 @@ Builds:
       - yes
     output: build/outputs/apk/release/app-release-unsigned.apk
     scanignore:
+      - android/build.gradle
       - node_modules/@capacitor/cli/assets/capacitor-cordova-android-plugins.tar.gz
     scandelete:
       - node_modules
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 3.0.9
-CurrentVersionCode: 30009
+CurrentVersion: 3.0.10
+CurrentVersionCode: 30010

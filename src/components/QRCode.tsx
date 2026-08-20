@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Capacitor } from '@capacitor/core'
-import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning'
 import QRCode from 'qrcode'
+import jsQR from 'jsqr'
 
 /**
  * Renders a QR code from the given data string.
@@ -74,7 +73,6 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [error, setError] = useState('')
-  const useNativeScanner = Capacitor.getPlatform() === 'android'
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach(track => track.stop())
@@ -90,60 +88,6 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
   useEffect(() => {
     let active = true
     let animFrame: number
-    let nativeListener: Awaited<ReturnType<typeof BarcodeScanner.addListener>> | null = null
-
-    const stopNativeScanner = async () => {
-      document.documentElement.classList.remove('barcode-scanner-active')
-      document.body.classList.remove('barcode-scanner-active')
-      await nativeListener?.remove().catch(() => {})
-      nativeListener = null
-      await BarcodeScanner.stopScan().catch(() => {})
-    }
-
-    const startNativeScanner = async () => {
-      try {
-        const supported = await BarcodeScanner.isSupported()
-        if (!supported.supported) throw new Error('QR scanning is not supported on this device')
-
-        // Use the app-owned CameraX scanner. The Google scanner UI asks for a
-        // separate Google Play services camera permission, which can remain
-        // denied even after the user grants PaperPhoneLite camera access.
-        let permission = await BarcodeScanner.checkPermissions()
-        if (permission.camera !== 'granted') {
-          permission = await BarcodeScanner.requestPermissions()
-        }
-        if (permission.camera !== 'granted') throw new Error('Camera permission is required')
-        if (!active) return
-
-        // Both the document and WebView content must be transparent because
-        // the native CameraX preview is inserted behind Capacitor's WebView.
-        document.documentElement.classList.add('barcode-scanner-active')
-        document.body.classList.add('barcode-scanner-active')
-        let completed = false
-        nativeListener = await BarcodeScanner.addListener('barcodesScanned', async event => {
-          if (!active || completed) return
-          const value = event.barcodes.find(barcode => barcode.rawValue)?.rawValue
-          if (!value) return
-          completed = true
-          active = false
-          await stopNativeScanner()
-          onScan(value)
-        })
-        if (!active) {
-          await stopNativeScanner()
-          return
-        }
-        await BarcodeScanner.startScan({ formats: [BarcodeFormat.QrCode] })
-      } catch (err: any) {
-        await stopNativeScanner()
-        if (!active) return
-        if (String(err?.message || '').toLowerCase().includes('canceled')) {
-          onClose()
-        } else {
-          setError(err.message || 'Cannot access camera')
-        }
-      }
-    }
 
     const start = async () => {
       try {
@@ -161,7 +105,8 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
           videoRef.current.play()
         }
 
-        // Use BarcodeDetector if available, otherwise fallback
+        // Prefer the platform detector when present, and use the bundled
+        // FOSS jsQR decoder everywhere else (including Android WebView).
         const detector = 'BarcodeDetector' in window
           ? new (window as any).BarcodeDetector({ formats: ['qr_code'] })
           : null
@@ -182,10 +127,27 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
                 }
               }
             } catch {}
-          } else {
-            // Fallback: draw to canvas and use jsQR-style approach
-            // Since we don't want an extra dep, we'll just rely on BarcodeDetector
-            // which is supported in most modern browsers
+          } else if (canvasRef.current) {
+            const video = videoRef.current
+            const canvas = canvasRef.current
+            const width = video.videoWidth
+            const height = video.videoHeight
+            if (width && height) {
+              canvas.width = width
+              canvas.height = height
+              const context = canvas.getContext('2d', { willReadFrequently: true })
+              context?.drawImage(video, 0, 0, width, height)
+              const pixels = context?.getImageData(0, 0, width, height)
+              const result = pixels && jsQR(pixels.data, width, height, {
+                inversionAttempts: 'dontInvert',
+              })
+              if (result?.data) {
+                active = false
+                stopCamera()
+                onScan(result.data)
+                return
+              }
+            }
           }
           if (active) animFrame = requestAnimationFrame(scan)
         }
@@ -196,21 +158,19 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       }
     }
 
-    if (useNativeScanner) startNativeScanner()
-    else start()
+    start()
 
     return () => {
       active = false
       cancelAnimationFrame(animFrame)
       stopCamera()
-      void stopNativeScanner()
     }
-  }, [useNativeScanner])
+  }, [])
 
   return (
-    <div className={useNativeScanner ? 'native-qr-scanner' : undefined} style={{
+    <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: useNativeScanner ? 'transparent' : '#000', display: 'flex', flexDirection: 'column',
+      background: '#000', display: 'flex', flexDirection: 'column',
     }}>
       <div style={{
         padding: '12px 16px', display: 'flex', alignItems: 'center',
@@ -227,9 +187,9 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       </div>
 
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {!useNativeScanner && <video ref={videoRef} style={{
+        <video ref={videoRef} style={{
           width: '100%', height: '100%', objectFit: 'cover',
-        }} playsInline muted />}
+        }} playsInline muted />
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
         {/* Scan frame overlay */}

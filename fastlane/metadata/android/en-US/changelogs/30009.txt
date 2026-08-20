@@ -1,1 +1,0 @@
-Fixed QR scanning permissions and improved Tor connectivity, messaging reliability, offline behavior, security, and interface consistency.

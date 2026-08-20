@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.10 — 2026-08-20
+
+- 移除依赖 Google ML Kit/Play Services 的原生扫码插件，改用 WebView 摄像头与内置开源 `jsQR` 解码，满足 F-Droid 纯自由软件要求。
+- 修正 F-Droid Node 22 构建环境、初始化目录和自动更新元数据，并为 Guardian Project 开源 Maven 仓库添加最小范围扫描例外。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.10`（`versionCode 30010`）。
+
+- Removed the native scanner plugin that depends on Google ML Kit/Play Services and replaced it with WebView camera capture plus the bundled FOSS `jsQR` decoder for F-Droid compliance.
+- Corrected the F-Droid Node 22 environment, initialization directory, and auto-update metadata, with a narrowly scoped scanner exception for Guardian Project's FOSS Maven repository.
+- Updated npm, Android native, and Profile-footer versions to `3.0.10` (`versionCode 30010`).
+
+---
+
 ## 3.0.9 — 2026-08-20
 
 - 为 F-Droid 源码构建移除发布签名密码回退值和本机 JDK 绝对路径；无密钥环境现在会生成未签名 APK，交由 F-Droid 签名。

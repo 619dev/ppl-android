@@ -1,0 +1,1 @@
+使用完全开源的 jsQR 摄像头扫码替代 Google ML Kit，并改进 F-Droid 源码构建兼容性。
