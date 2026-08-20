@@ -21,9 +21,9 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 
 Builds:
-  - versionName: 3.0.8
-    versionCode: 30008
-    commit: v3.0.8
+  - versionName: 3.0.9
+    versionCode: 30009
+    commit: v3.0.9
     subdir: android/app
     sudo:
       - apt-get update
@@ -43,5 +43,5 @@ Builds:
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 3.0.8
-CurrentVersionCode: 30008
+CurrentVersion: 3.0.9
+CurrentVersionCode: 30009

@@ -5,7 +5,7 @@
 > Android client for [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite), packaging the upstream React/TypeScript frontend with Capacitor 8 and a bundled Tor client.
 
 [![Upstream](https://img.shields.io/badge/Upstream-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/Version-3.0.8-orange)](package.json)
+[![Version](https://img.shields.io/badge/Version-3.0.9-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## Scope
@@ -40,7 +40,7 @@ ntfy is the retained and required Android notification path. The app obtains a d
 ## Local Data and Keys
 
 - The upstream frontend stores identity keys and Sender Keys in IndexedDB, while sessions, settings, message caches, and offline data use localStorage.
-- Decrypted message fields are removed before message-cache persistence, but the current 3.0.8 frontend does not encrypt the entire chat cache with Android Keystore.
+- Decrypted message fields are removed before message-cache persistence, but the current 3.0.9 frontend does not encrypt the entire chat cache with Android Keystore.
 - Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.0 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
 - Clearing app data or uninstalling the app can permanently remove local keys and unrecoverable history.
 
@@ -50,8 +50,8 @@ ntfy is the retained and required Android notification path. The app obtains a d
 |---|---|
 | App name | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| Version | `3.0.8` |
-| Version code | `30008` |
+| Version | `3.0.9` |
+| Version code | `30009` |
 | Minimum Android API | 24 |
 
 ## Build

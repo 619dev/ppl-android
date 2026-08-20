@@ -4,6 +4,20 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.9 — 2026-08-20
+
+- 为 F-Droid 源码构建移除发布签名密码回退值和本机 JDK 绝对路径；无密钥环境现在会生成未签名 APK，交由 F-Droid 签名。
+- 增加 F-Droid 构建元数据、中英文商店说明和发布检查清单。
+- 移除 Google Fonts 运行时请求，改用现有系统字体回退。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.9`（`versionCode 30009`）。
+
+- Prepared source builds for F-Droid by removing signing-password fallbacks and the machine-specific JDK path; environments without a key now produce an unsigned APK for F-Droid to sign.
+- Added F-Droid build metadata, English and Chinese store listings, and a release checklist.
+- Removed the runtime Google Fonts request in favor of the existing system-font fallback.
+- Updated npm, Android native, and Profile-footer versions to `3.0.9` (`versionCode 30009`).
+
+---
+
 ## 3.0.8 — 2026-08-18
 
 - 修复已授予 PaperPhoneLite 摄像头权限后，扫码仍要求为 Google Play 服务单独授予摄像头权限的问题。

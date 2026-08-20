@@ -1,7 +1,7 @@
 {
   "name": "paperphone-lite-android",
   "private": true,
-  "version": "3.0.8",
+  "version": "3.0.9",
   "type": "module",
   "scripts": {
     "dev": "vite",

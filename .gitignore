@@ -105,3 +105,5 @@ app/src/main/res/xml/config.xml
 android/app/build/
 android/.gradle/
 android/local.properties
+android/.idea/
+*.tsbuildinfo
