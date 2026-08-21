@@ -73,11 +73,19 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [error, setError] = useState('')
+  const [isStarting, setIsStarting] = useState(false)
 
   const stopCamera = () => {
-    streamRef.current?.getTracks().forEach(track => track.stop())
+    try {
+      streamRef.current?.getTracks().forEach(track => track.stop())
+    } catch {}
     streamRef.current = null
-    if (videoRef.current) videoRef.current.srcObject = null
+    try {
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.srcObject = null
+      }
+    } catch {}
   }
 
   const handleClose = () => {
@@ -88,22 +96,80 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
   useEffect(() => {
     let active = true
     let animFrame = 0
-    const canUseMediaDevices = typeof navigator !== 'undefined' && !!navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia
+    const canUseMediaDevices =
+      typeof navigator !== 'undefined' &&
+      typeof navigator.mediaDevices === 'object' &&
+      typeof navigator.mediaDevices.getUserMedia === 'function'
+
+    const acquireStream = async () => {
+      if (!canUseMediaDevices) {
+        throw new Error('Camera API is not available on this device')
+      }
+
+      const candidates = [
+        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 }, }, audio: false },
+        { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 }, }, audio: false },
+        { video: true, audio: false },
+      ] as const
+
+      let lastErr: unknown
+      for (const constraints of candidates) {
+        try {
+          return await navigator.mediaDevices.getUserMedia(constraints as MediaStreamConstraints)
+        } catch (err) {
+          lastErr = err
+        }
+      }
+
+      throw lastErr ?? new Error('Unable to access camera')
+    }
+
+    const createDetector = () => {
+      try {
+        const CandidateDetector = (window as any).BarcodeDetector
+        if (typeof CandidateDetector !== 'function') return null
+        return new CandidateDetector({ formats: ['qr_code'] })
+      } catch {
+        return null
+      }
+    }
+
+    const decodeWithDetector = async (detector: any | null, video: HTMLVideoElement) => {
+      if (!detector) return null
+      try {
+        const barcodes = await detector.detect(video)
+        const qrValue = barcodes?.find((bc: any) => Boolean(bc?.rawValue))?.rawValue
+        return qrValue ?? null
+      } catch {
+        return null
+      }
+    }
+
+    const decodeWithCanvas = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
+      try {
+        const width = video.videoWidth
+        const height = video.videoHeight
+        if (!width || !height || video.readyState < 2) return null
+
+        canvas.width = width
+        canvas.height = height
+
+        const context = canvas.getContext('2d', { willReadFrequently: true })
+        if (!context) return null
+
+        context.drawImage(video, 0, 0, width, height)
+        const pixels = context.getImageData(0, 0, width, height)
+        const result = jsQR(pixels.data, width, height, { inversionAttempts: 'dontInvert' })
+        return result?.data ?? null
+      } catch {
+        return null
+      }
+    }
 
     const start = async () => {
+      setIsStarting(true)
       try {
-        if (!canUseMediaDevices) {
-          setError('Camera API is not available on this WebView')
-          return
-        }
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-        })
+        const stream = await acquireStream()
 
         // The scanner may have been closed while the permission prompt was open.
         if (!active) {
@@ -112,83 +178,58 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         }
 
         streamRef.current = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          await videoRef.current.play().catch(() => {
-            // Autoplay may be blocked if the WebView requires explicit interaction.
-          })
+        if (!videoRef.current) {
+          throw new Error('Camera view is unavailable')
         }
 
-        let detector: any | null = null
+        videoRef.current.srcObject = stream
+        videoRef.current.setAttribute('playsinline', 'true')
+        videoRef.current.muted = true
         try {
-          const CandidateDetector = (window as any).BarcodeDetector
-          if (typeof CandidateDetector === 'function') {
-            detector = new CandidateDetector({ formats: ['qr_code'] })
-          }
+          await videoRef.current.play()
         } catch {
-          detector = null
+          setError('Please tap again to allow camera permission and playback')
+        }
+
+        const detector = createDetector()
+        const finalizeScan = (value: string) => {
+          active = false
+          stopCamera()
+          Promise.resolve().then(() => onScan(value)).catch(() => {})
         }
 
         const scan = async () => {
-          if (!active || !videoRef.current || !canvasRef.current) {
-            if (active) animFrame = requestAnimationFrame(scan)
-            return
-          }
-
-          if (detector) {
-            try {
-              const barcodes = await detector.detect(videoRef.current)
-              const qrValue = barcodes?.find((bc: any) => Boolean(bc?.rawValue))?.rawValue
-              if (qrValue) {
-                active = false
-                stopCamera()
-                onScan(qrValue)
-                return
-              }
-            } catch {
-              detector = null
-            }
-          }
-
           try {
-            const video = videoRef.current
-            const canvas = canvasRef.current
-            const width = video.videoWidth
-            const height = video.videoHeight
+            if (!active || !videoRef.current || !canvasRef.current) {
+              if (active) animFrame = requestAnimationFrame(scan)
+              return
+            }
 
-            if (width && height && video.readyState >= 2) {
-              canvas.width = width
-              canvas.height = height
+            const detected = await decodeWithDetector(detector, videoRef.current)
+            if (detected) {
+              finalizeScan(detected)
+              return
+            }
 
-              const context = canvas.getContext('2d', { willReadFrequently: true })
-              if (!context) {
-                animFrame = requestAnimationFrame(scan)
-                return
-              }
-
-              context.drawImage(video, 0, 0, width, height)
-              const pixels = context.getImageData(0, 0, width, height)
-              const result = jsQR(pixels.data, width, height, {
-                inversionAttempts: 'dontInvert',
-              })
-
-              if (result?.data) {
-                active = false
-                stopCamera()
-                onScan(result.data)
-                return
-              }
+            const result = decodeWithCanvas(videoRef.current, canvasRef.current)
+            if (result) {
+              finalizeScan(result)
+              return
             }
           } catch {
-            // Keep scanning if canvas decode fails on this frame.
+            // keep scanning on transient frame errors
           }
 
-          if (active) animFrame = requestAnimationFrame(scan)
+          if (active) {
+            animFrame = requestAnimationFrame(scan)
+          }
         }
 
         scan()
       } catch (err: any) {
         setError(err?.message || 'Cannot access camera')
+      } finally {
+        setIsStarting(false)
       }
     }
 
@@ -253,6 +294,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
             <div>
               <div style={{ fontSize: 48, marginBottom: 12 }}>📷</div>
               <div>{error}</div>
+              {isStarting ? <div style={{ marginTop: 8, opacity: 0.9 }}>Loading camera…</div> : null}
             </div>
           </div>
         )}
