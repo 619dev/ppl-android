@@ -137,29 +137,6 @@ body {
   overflow: hidden;
 }
 
-/* Native ML Kit renders CameraX behind the WebView while scanning. */
-html.barcode-scanner-active,
-body.barcode-scanner-active,
-body.barcode-scanner-active #root,
-body.barcode-scanner-active #discover-page {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-body.barcode-scanner-active #root > * {
-  visibility: hidden !important;
-}
-
-body.barcode-scanner-active #root > #discover-page,
-body.barcode-scanner-active .native-qr-scanner,
-body.barcode-scanner-active .native-qr-scanner * {
-  visibility: visible !important;
-}
-
-body.barcode-scanner-active #discover-page > :not(.native-qr-scanner) {
-  visibility: hidden !important;
-}
-
 #root {
   display: flex;
   flex-direction: column;

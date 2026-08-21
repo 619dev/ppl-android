@@ -87,60 +87,91 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
 
   useEffect(() => {
     let active = true
-    let animFrame: number
+    let animFrame = 0
+    const canUseMediaDevices = typeof navigator !== 'undefined' && !!navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia
 
     const start = async () => {
       try {
+        if (!canUseMediaDevices) {
+          setError('Camera API is not available on this WebView')
+          return
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
         })
+
         // The scanner may have been closed while the permission prompt was open.
         if (!active) {
           stream.getTracks().forEach(track => track.stop())
           return
         }
+
         streamRef.current = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream
-          videoRef.current.play()
+          await videoRef.current.play().catch(() => {
+            // Autoplay may be blocked if the WebView requires explicit interaction.
+          })
         }
 
-        // Prefer the platform detector when present, and use the bundled
-        // FOSS jsQR decoder everywhere else (including Android WebView).
-        const detector = 'BarcodeDetector' in window
-          ? new (window as any).BarcodeDetector({ formats: ['qr_code'] })
-          : null
+        let detector: any | null = null
+        try {
+          const CandidateDetector = (window as any).BarcodeDetector
+          if (typeof CandidateDetector === 'function') {
+            detector = new CandidateDetector({ formats: ['qr_code'] })
+          }
+        } catch {
+          detector = null
+        }
 
         const scan = async () => {
-          if (!active || !videoRef.current || videoRef.current.readyState < 2) {
-            animFrame = requestAnimationFrame(scan)
+          if (!active || !videoRef.current || !canvasRef.current) {
+            if (active) animFrame = requestAnimationFrame(scan)
             return
           }
 
           if (detector) {
             try {
               const barcodes = await detector.detect(videoRef.current)
-              for (const bc of barcodes) {
-                if (bc.rawValue) {
-                  onScan(bc.rawValue)
-                  return
-                }
+              const qrValue = barcodes?.find((bc: any) => Boolean(bc?.rawValue))?.rawValue
+              if (qrValue) {
+                active = false
+                stopCamera()
+                onScan(qrValue)
+                return
               }
-            } catch {}
-          } else if (canvasRef.current) {
+            } catch {
+              detector = null
+            }
+          }
+
+          try {
             const video = videoRef.current
             const canvas = canvasRef.current
             const width = video.videoWidth
             const height = video.videoHeight
-            if (width && height) {
+
+            if (width && height && video.readyState >= 2) {
               canvas.width = width
               canvas.height = height
+
               const context = canvas.getContext('2d', { willReadFrequently: true })
-              context?.drawImage(video, 0, 0, width, height)
-              const pixels = context?.getImageData(0, 0, width, height)
-              const result = pixels && jsQR(pixels.data, width, height, {
+              if (!context) {
+                animFrame = requestAnimationFrame(scan)
+                return
+              }
+
+              context.drawImage(video, 0, 0, width, height)
+              const pixels = context.getImageData(0, 0, width, height)
+              const result = jsQR(pixels.data, width, height, {
                 inversionAttempts: 'dontInvert',
               })
+
               if (result?.data) {
                 active = false
                 stopCamera()
@@ -148,13 +179,16 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
                 return
               }
             }
+          } catch {
+            // Keep scanning if canvas decode fails on this frame.
           }
+
           if (active) animFrame = requestAnimationFrame(scan)
         }
 
         scan()
       } catch (err: any) {
-        setError(err.message || 'Cannot access camera')
+        setError(err?.message || 'Cannot access camera')
       }
     }
 

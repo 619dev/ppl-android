@@ -4,6 +4,16 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.18 — 2026-08-22
+
+- 修复“扫一扫”启动即崩溃，增强 WebView 扫码路径容错与生命周期清理，避免 Android 首次打开扫描页时报错退出。
+- 清理已废弃的原生扫码兼容样式，统一使用前端扫描与 F-Droid 兼容实现。
+- npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.18`（`versionCode 30018`）。
+
+- Fixed a crash that occurred when opening the QR scan flow, with improved WebView scanner error handling and lifecycle cleanup to prevent immediate termination.
+- Removed obsolete native-scanner compatibility styles and aligned on the pure frontend scanner path for F-Droid compliance.
+- Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.18` (`versionCode 30018`).
+
 ## 3.0.15 — 2026-08-21
 
 - 修复私聊或群聊 Sender Key 解密后，收到的附件仍停留在文本外观密文状态的问题，恢复跨设备文件名显示和下载访问。
