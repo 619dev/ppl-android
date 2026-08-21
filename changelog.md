@@ -4,6 +4,20 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.15 — 2026-08-21
+
+- 修复私聊或群聊 Sender Key 解密后，收到的附件仍停留在文本外观密文状态的问题，恢复跨设备文件名显示和下载访问。
+- 已登录账号启用文本外观加密时，Android App 启动后提示输入额外密码；取消或密码错误时继续只显示文本外观密文。
+- 为全部 8 种界面语言补充启动解锁和密码错误提示。
+- npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.15`（`versionCode 30015`）。
+
+- Fixed received attachments remaining as styled ciphertext after private-chat or group Sender Key decryption, restoring cross-device filenames and download access.
+- Added a startup password prompt for signed-in accounts with text-appearance encryption enabled; cancelling or entering an incorrect password leaves only styled ciphertext visible.
+- Added startup-unlock and incorrect-password text in all eight UI languages.
+- Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.15` (`versionCode 30015`).
+
+---
+
 ## 3.0.13 — 2026-08-21
 
 - 修复 Android 聊天中的文件消息点击下载按钮没有反应：鉴权下载完成后，附件会分块写入原生临时文件并打开系统分享/保存面板，不再依赖 WebView 对 `blob:` 下载的支持。

@@ -48,7 +48,7 @@ Description:
 > PaperPhoneLite is a client for private messaging through a self-hosted
 > PaperPhoneLite onion service. It bundles Tor and supports private and group
 > chats, attachments, local offline data, disappearing messages, safety
-> numbers, and optional ntfy notifications.
+> numbers, optional text-appearance encryption, and optional ntfy notifications.
 >
 > A compatible self-hosted server is required. The app does not include Google
 > Play services, Firebase, advertising, or analytics.

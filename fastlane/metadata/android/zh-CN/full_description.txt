@@ -1,5 +1,5 @@
 PaperPhoneLite 是用于连接自托管 PaperPhoneLite 洋葱服务的隐私通信客户端。
 
-应用内置 Tor，支持私聊、群聊、附件、本地离线数据、消息自动删除、安全号码以及可选的 ntfy 通知。
+应用内置 Tor，支持私聊、群聊、附件、本地离线数据、消息自动删除、安全号码、带启动解锁的可选文本外观加密以及可选的 ntfy 通知。
 
 使用本应用需要兼容的自托管服务端。PaperPhoneLite 不包含 Google Play 服务、Firebase、广告或分析组件。

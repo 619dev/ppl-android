@@ -1,0 +1,1 @@
+Fixes cross-device attachment filenames and downloads when text-appearance encryption is enabled, and adds a localized startup unlock prompt.

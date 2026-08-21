@@ -5,7 +5,7 @@
 > Android client for [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite), packaging the upstream React/TypeScript frontend with Capacitor 8 and a bundled Tor client.
 
 [![Upstream](https://img.shields.io/badge/Upstream-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/Version-3.0.13-orange)](package.json)
+[![Version](https://img.shields.io/badge/Version-3.0.15-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## Scope
@@ -19,8 +19,8 @@ The current client provides:
 - X25519 + ML-KEM-768 hybrid key agreement, XSalsa20-Poly1305 message encryption, group Sender Keys, and safety numbers.
 - Message synchronization, local offline caches, a persistent outbox, read receipts, and typing state.
 - Message expiry, blocking, friend labels, QR flows, and TOTP two-factor authentication.
-- An extra message password, eight text presentations, and foreground/background locking.
-- The required Android ntfy registration and subscription flow.
+- An extra message password, eight text presentations, foreground/background locking, and a startup unlock prompt.
+- The optional Android ntfy registration and subscription flow.
 
 PaperPhoneLite 3.x does **not** provide Moments, a public Timeline, direct or group voice/video calls, LiveKit, Cloudflare R2, or a production Web/PWA distribution.
 
@@ -35,12 +35,13 @@ PaperPhoneLite 3.x does **not** provide Moments, a public Timeline, direct or gr
 
 ## Notifications and Third Parties
 
-ntfy is the retained and required Android notification path. The app obtains a dedicated topic, registers it with the server, and provides copy/download actions; the user subscribes to that topic in the ntfy app. The client includes no FCM, Firebase, OneSignal, Web Push, or Google Services.
+ntfy is the only supported, optional Android background-notification path. When enabled, the app obtains a dedicated topic, registers it with the server, and provides copy/download actions; the user subscribes to that topic in the ntfy app. The client includes no FCM, Firebase, OneSignal, Web Push, or Google Services.
 
 ## Local Data and Keys
 
 - The upstream frontend stores identity keys and Sender Keys in IndexedDB, while sessions, settings, message caches, and offline data use localStorage.
-- Decrypted message fields are removed before message-cache persistence, but the current 3.0.13 frontend does not encrypt the entire chat cache with Android Keystore.
+- Decrypted message fields are removed before message-cache persistence, but the current 3.0.15 frontend does not encrypt the entire chat cache with Android Keystore.
+- When text-appearance encryption is enabled, startup asks for the extra password; cancelling or entering an incorrect password leaves only the styled ciphertext visible. This does not replace a device lock or Android Keystore.
 - Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.0 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
 - Clearing app data or uninstalling the app can permanently remove local keys and unrecoverable history.
 
@@ -50,8 +51,8 @@ ntfy is the retained and required Android notification path. The app obtains a d
 |---|---|
 | App name | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| Version | `3.0.13` |
-| Version code | `30013` |
+| Version | `3.0.15` |
+| Version code | `30015` |
 | Minimum Android API | 24 |
 
 ## Build

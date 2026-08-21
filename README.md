@@ -5,7 +5,7 @@
 > [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite) 的 Android 客户端，使用 Capacitor 8 打包上游 React/TypeScript 前端，并内嵌 Tor。
 
 [![Upstream](https://img.shields.io/badge/上游-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/版本-3.0.13-orange)](package.json)
+[![Version](https://img.shields.io/badge/版本-3.0.15-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## 项目范围
@@ -19,8 +19,8 @@
 - X25519 + ML-KEM-768 混合密钥协商、XSalsa20-Poly1305 消息加密、群聊 Sender Key 和安全号码。
 - 消息同步、本地离线缓存、持久化发件箱、已读状态和输入状态。
 - 消息自动删除、拉黑、好友标签、二维码和 TOTP 两步验证。
-- 额外消息密码、8 种文本外观及前后台自动锁定。
-- Android 必需的 ntfy 通知注册与订阅流程。
+- 额外消息密码、8 种文本外观、前后台自动锁定及启动解锁提示。
+- Android 可选的 ntfy 通知注册与订阅流程。
 
 PaperPhoneLite 3.x **不提供**朋友圈、公开时间线、单聊或群聊语音/视频通话、LiveKit、Cloudflare R2 或 Web/PWA 生产发行。
 
@@ -35,12 +35,13 @@ PaperPhoneLite 3.x **不提供**朋友圈、公开时间线、单聊或群聊语
 
 ## 通知与第三方服务
 
-ntfy 是 Android 的保留且必需通知方案。应用从服务端取得专属主题、向服务端注册订阅并提供复制/下载入口；用户需在 ntfy App 中订阅该主题。客户端不包含 FCM、Firebase、OneSignal、Web Push 或 Google Services。
+ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从服务端取得专属主题、向服务端注册订阅并提供复制/下载入口；用户需在 ntfy App 中订阅该主题。客户端不包含 FCM、Firebase、OneSignal、Web Push 或 Google Services。
 
 ## 本地数据与密钥
 
 - 上游前端通过 IndexedDB 保存身份密钥和 Sender Key，通过 localStorage 保存会话、设置、消息缓存与离线数据。
-- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.13 前端没有把整个聊天缓存交给 Android Keystore 加密。
+- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.15 前端没有把整个聊天缓存交给 Android Keystore 加密。
+- 启用“文本外观加密”后，应用启动会要求输入额外密码；错误或取消解锁时只显示文本外观密文。该功能不会替代设备锁或 Android Keystore。
 - 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.0 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
 - 清理应用数据或卸载应用可能永久删除本地密钥及无法恢复的历史消息。
 
@@ -50,8 +51,8 @@ ntfy 是 Android 的保留且必需通知方案。应用从服务端取得专属
 |---|---|
 | 应用名称 | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| 版本 | `3.0.13` |
-| Version Code | `30013` |
+| 版本 | `3.0.15` |
+| Version Code | `30015` |
 | 最低 Android API | 24 |
 
 ## 构建
