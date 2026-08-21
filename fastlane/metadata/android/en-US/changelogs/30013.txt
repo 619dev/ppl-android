@@ -1,0 +1,1 @@
+Fixes unresponsive file-message download buttons and reliably opens Android's share/save sheet after downloading an attachment.

@@ -20,9 +20,9 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 
 Builds:
-  - versionName: 3.0.12
-    versionCode: 30012
-    commit: d3f15f2be3614646edf6aaae85728d2b7009d871
+  - versionName: 3.0.13
+    versionCode: 30013
+    commit: v3.0.13
     subdir: android/app
     sudo:
       - apt-get update
@@ -44,5 +44,5 @@ Builds:
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 3.0.12
-CurrentVersionCode: 30012
+CurrentVersion: 3.0.13
+CurrentVersionCode: 30013

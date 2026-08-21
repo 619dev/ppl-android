@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.13 — 2026-08-21
+
+- 修复 Android 聊天中的文件消息点击下载按钮没有反应：鉴权下载完成后，附件会分块写入原生临时文件并打开系统分享/保存面板，不再依赖 WebView 对 `blob:` 下载的支持。
+- 防止附件保存、文件上传和消息发送被快速重复触发，并在附件保存期间显示处理中状态。
+- npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.13`（`versionCode 30013`）。
+
+- Fixed file-message download buttons appearing unresponsive in Android chats. Authenticated attachments are now streamed into a native temporary file before opening the system share/save sheet, without relying on WebView `blob:` downloads.
+- Prevented rapid duplicate attachment saves, file uploads, and message sends, and added an in-progress state while an attachment is being saved.
+- Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.13` (`versionCode 30013`).
+
+---
+
 ## 3.0.12 — 2026-08-21
 
 - 附件改为通过当前配置的 PaperPhone 服务在应用内鉴权下载，避免 Android 将 onion 文件链接交给系统浏览器。

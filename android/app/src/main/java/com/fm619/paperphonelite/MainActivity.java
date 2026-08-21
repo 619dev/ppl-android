@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(TorPlugin.class);
         registerPlugin(KeepAwakePlugin.class);
         registerPlugin(SecureStoragePlugin.class);
+        registerPlugin(AttachmentSaverPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
