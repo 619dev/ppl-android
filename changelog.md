@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.12 — 2026-08-21
+
+- 附件改为通过当前配置的 PaperPhone 服务在应用内鉴权下载，避免 Android 将 onion 文件链接交给系统浏览器。
+- 下载后优先打开 Android 原生分享/保存面板，并保留浏览器下载回退。
+- npm、Android 原生版本及个人信息页底部版本统一更新为 `3.0.12`（`versionCode 30012`）。
+
+- Attachments are now downloaded through the configured PaperPhone server with in-app authentication, preventing Android from handing onion file links to the system browser.
+- Downloads prefer the Android share/save sheet and retain a browser-download fallback.
+- Updated npm, Android native, and Profile-footer versions to `3.0.12` (`versionCode 30012`).
+
+---
+
 ## 3.0.11 — 2026-08-20
 
 - 为 F-Droid 上架补充中英文 Fastlane 手机截图和预填的 RFP 材料。

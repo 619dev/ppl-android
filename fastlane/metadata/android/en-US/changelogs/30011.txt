@@ -1,1 +1,0 @@
-Added localized store screenshots and completed the metadata needed for the F-Droid submission.

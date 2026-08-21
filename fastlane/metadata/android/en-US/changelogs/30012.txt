@@ -1,0 +1,1 @@
+Downloads attachments securely through the configured PaperPhone server and opens Android's share/save sheet.

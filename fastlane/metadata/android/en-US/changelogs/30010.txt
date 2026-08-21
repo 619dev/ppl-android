@@ -1,1 +1,0 @@
-Replaced the Google ML Kit scanner with a fully open-source jsQR camera scanner and improved F-Droid source-build compatibility.
