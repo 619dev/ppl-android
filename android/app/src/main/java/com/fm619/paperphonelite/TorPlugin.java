@@ -2,7 +2,6 @@ package com.fm619.paperphonelite;
 
 import IPtProxy.Controller;
 import IPtProxy.IPtProxy;
-import IPtProxy.OnTransportEvents;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -68,15 +67,6 @@ public class TorPlugin extends Plugin {
     private final ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService recoveryWaitExecutor = Executors.newCachedThreadPool();
     private Controller transportController;
-    // gomobile keeps only a native reference to this callback. Retain the Java
-    // object for the entire plugin lifetime so Go cannot call a collected ref.
-    private final OnTransportEvents transportEvents = new OnTransportEvents() {
-        @Override public void connected(String name) { Log.i(TAG, "WebTunnel transport connected"); }
-        @Override public void error(String name, Exception error) { Log.e(TAG, "WebTunnel transport error", error); }
-        @Override public void stopped(String name, Exception error) {
-            if (error != null) Log.e(TAG, "WebTunnel transport stopped", error);
-        }
-    };
 
     private final Runnable directConnectTimeout = () -> {
         if (!TorService.STATUS_ON.equals(status) && !fallbackInProgress && !usingWebTunnel) {
@@ -272,21 +262,20 @@ public class TorPlugin extends Plugin {
                 !value.contains(" url=https://") || !value.matches(".*\\sver=[0-9.]+(?:\\s.*)?$")) {
             return null;
         }
-        return value;
+        // Match the working iOS/macOS clients. IPtProxy's randomized uTLS
+        // profile may select hybrid curves unsupported by its mobile Go
+        // runtime; standard TLS is explicitly supported by WebTunnel.
+        return value.matches(".*\\sutls=.*") ? value : value + " utls=none";
     }
 
     private synchronized void stopWebTunnelTransport() {
         Controller controller = transportController;
-        // Never reuse a Controller after stop(): its gomobile Go ref is no
-        // longer valid even though the Java wrapper still exists.
-        transportController = null;
         if (controller == null) return;
         try {
             controller.stop(IPtProxy.Webtunnel);
         } catch (Exception error) {
             Log.w(TAG, "Unable to stop previous WebTunnel transport", error);
         }
-        SystemClock.sleep(250);
     }
 
     private synchronized long startWebTunnelTransport() throws Exception {
@@ -294,10 +283,14 @@ public class TorPlugin extends Plugin {
         if (!stateDir.exists() && !stateDir.mkdirs()) {
             throw new IllegalStateException("Unable to create WebTunnel state directory");
         }
-        if (transportController != null) stopWebTunnelTransport();
-        transportController = new Controller(
-                stateDir.getAbsolutePath(), true, false, "INFO", transportEvents
-        );
+        if (transportController == null) {
+            // iOS passes nil transport events as well. Avoid exporting a Java
+            // callback through gomobile, which can otherwise leave a stale
+            // Java refnum after stop/start recovery.
+            transportController = new Controller(
+                    stateDir.getAbsolutePath(), false, false, "INFO", null
+            );
+        }
         transportController.start(IPtProxy.Webtunnel, null);
         long port = transportController.port(IPtProxy.Webtunnel);
         if (port < 1 || port > 65535) throw new IllegalStateException("Invalid WebTunnel transport port");
