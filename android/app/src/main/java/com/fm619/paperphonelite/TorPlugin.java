@@ -2,6 +2,7 @@ package com.fm619.paperphonelite;
 
 import IPtProxy.Controller;
 import IPtProxy.IPtProxy;
+import IPtProxy.OnTransportEvents;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,7 +12,6 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
@@ -26,7 +26,6 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import org.torproject.jni.TorService;
-import net.freehaven.tor.control.TorControlConnection;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,25 +46,21 @@ import java.util.concurrent.Executors;
 @CapacitorPlugin(name = "TorPlugin")
 public class TorPlugin extends Plugin {
     private static final String TAG = "TorPlugin";
+    private static final int SOCKS_PORT = 9050;
     private static final long DIRECT_CONNECT_TIMEOUT_MS = 20_000;
     private static final long WEBTUNNEL_CONNECT_TIMEOUT_MS = 45_000;
     private static final String WEBTUNNEL_SETTINGS_URL =
             "https://bridges.torproject.org/moat/circumvention/settings";
     private static final String WEBTUNNEL_CACHE_KEY = "webtunnel_bridge";
-    private static final long WEBTUNNEL_RECOVERY_TIMEOUT_MS = 75_000;
-    private static volatile TorService activeTorService;
-    private static volatile TorPlugin activePlugin;
 
-    private volatile String status = TorService.STATUS_OFF;
-    private volatile boolean proxyReady;
-    private volatile boolean usingWebTunnel;
-    private volatile boolean fallbackInProgress;
-    private volatile String webTunnelError;
+    private String status = TorService.STATUS_OFF;
+    private boolean proxyReady;
+    private boolean usingWebTunnel;
+    private boolean fallbackInProgress;
     private boolean receiverRegistered;
     private boolean serviceBound;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
-    private final ExecutorService recoveryWaitExecutor = Executors.newCachedThreadPool();
     private Controller transportController;
 
     private final Runnable directConnectTimeout = () -> {
@@ -107,16 +102,12 @@ public class TorPlugin extends Plugin {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             serviceBound = true;
-            if (binder instanceof TorService.LocalBinder) {
-                activeTorService = ((TorService.LocalBinder) binder).getService();
-            }
             Log.i(TAG, "Embedded Tor service connected");
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             serviceBound = false;
-            activeTorService = null;
             status = TorService.STATUS_OFF;
         }
     };
@@ -124,7 +115,6 @@ public class TorPlugin extends Plugin {
     @Override
     public void load() {
         super.load();
-        activePlugin = this;
         registerStatusReceiver();
     }
 
@@ -158,7 +148,13 @@ public class TorPlugin extends Plugin {
     private void startDirectTor() {
         boolean restartRequired = serviceBound;
         mainHandler.removeCallbacks(webTunnelConnectTimeout);
-        stopWebTunnelTransport();
+        if (transportController != null) {
+            try {
+                transportController.stop(IPtProxy.Webtunnel);
+            } catch (Exception error) {
+                Log.w(TAG, "Unable to stop previous WebTunnel transport", error);
+            }
+        }
         if (restartRequired) stopEmbeddedTor();
         usingWebTunnel = false;
         fallbackInProgress = false;
@@ -174,7 +170,6 @@ public class TorPlugin extends Plugin {
 
     private void startWebTunnelFallback() {
         fallbackInProgress = true;
-        webTunnelError = null;
         status = "FETCHING_WEBTUNNEL";
         notifyStatusChange();
 
@@ -184,7 +179,6 @@ public class TorPlugin extends Plugin {
                 if (bridge == null) bridge = loadCachedWebTunnelBridge();
                 if (bridge == null) throw new IllegalStateException("No WebTunnel bridge is available");
 
-                if (usingWebTunnel) stopWebTunnelTransport();
                 long transportPort = startWebTunnelTransport();
                 writeWebTunnelTorrc(bridge, transportPort);
 
@@ -193,8 +187,6 @@ public class TorPlugin extends Plugin {
                 Log.e(TAG, "Unable to configure WebTunnel", error);
                 mainHandler.post(() -> {
                     fallbackInProgress = false;
-                    webTunnelError = error.getMessage() == null
-                            ? error.getClass().getSimpleName() : error.getMessage();
                     status = "WEBTUNNEL_ERROR";
                     notifyStatusChange();
                 });
@@ -262,33 +254,26 @@ public class TorPlugin extends Plugin {
                 !value.contains(" url=https://") || !value.matches(".*\\sver=[0-9.]+(?:\\s.*)?$")) {
             return null;
         }
-        // Match the working iOS/macOS clients. IPtProxy's randomized uTLS
-        // profile may select hybrid curves unsupported by its mobile Go
-        // runtime; standard TLS is explicitly supported by WebTunnel.
+        // Keep the known-good mobile setting used by the iOS/macOS clients:
+        // avoid randomized hybrid uTLS curves unsupported by IPtProxy's Go runtime.
         return value.matches(".*\\sutls=.*") ? value : value + " utls=none";
     }
 
-    private synchronized void stopWebTunnelTransport() {
-        Controller controller = transportController;
-        if (controller == null) return;
-        try {
-            controller.stop(IPtProxy.Webtunnel);
-        } catch (Exception error) {
-            Log.w(TAG, "Unable to stop previous WebTunnel transport", error);
-        }
-    }
-
-    private synchronized long startWebTunnelTransport() throws Exception {
+    private long startWebTunnelTransport() throws Exception {
         File stateDir = new File(getContext().getCacheDir(), "webtunnel-pt");
         if (!stateDir.exists() && !stateDir.mkdirs()) {
             throw new IllegalStateException("Unable to create WebTunnel state directory");
         }
         if (transportController == null) {
-            // iOS passes nil transport events as well. Avoid exporting a Java
-            // callback through gomobile, which can otherwise leave a stale
-            // Java refnum after stop/start recovery.
             transportController = new Controller(
-                    stateDir.getAbsolutePath(), false, false, "INFO", null
+                    stateDir.getAbsolutePath(), true, false, "INFO",
+                    new OnTransportEvents() {
+                        @Override public void connected(String name) { Log.i(TAG, "WebTunnel transport connected"); }
+                        @Override public void error(String name, Exception error) { Log.e(TAG, "WebTunnel transport error", error); }
+                        @Override public void stopped(String name, Exception error) {
+                            if (error != null) Log.e(TAG, "WebTunnel transport stopped", error);
+                        }
+                    }
             );
         }
         transportController.start(IPtProxy.Webtunnel, null);
@@ -323,91 +308,16 @@ public class TorPlugin extends Plugin {
             context.unbindService(connection);
             serviceBound = false;
         }
-        activeTorService = null;
         context.stopService(new Intent(context, TorService.class));
     }
 
-    /** Refresh client circuits and the hidden-service descriptor after a routing failure. */
-    static synchronized boolean refreshOnionRoute(String onionHost) {
-        TorService service = activeTorService;
-        if (service == null) return false;
-        try {
-            TorControlConnection control = service.getTorControlConnection();
-            if (control == null) return false;
-            control.signal("NEWNYM");
-            if (onionHost != null && onionHost.endsWith(".onion")) {
-                control.hsFetch(onionHost.substring(0, onionHost.length() - ".onion".length()));
-            }
-            Log.i(TAG, "Refreshed Tor route and onion descriptor after request failure");
-            return true;
-        } catch (Exception error) {
-            Log.w(TAG, "Unable to request a fresh Tor identity", error);
-            return false;
-        }
-    }
-
-    /**
-     * Switch to a freshly obtained WebTunnel bridge after Tor itself is up but
-     * onion streams cannot be routed. Concurrent callers share one recovery.
-     */
-    static synchronized boolean requestWebTunnelRecovery() {
-        TorPlugin plugin = activePlugin;
-        if (plugin == null) return false;
-        if (plugin.fallbackInProgress) return true;
-        plugin.fallbackInProgress = true;
-        plugin.mainHandler.post(plugin::startWebTunnelFallback);
-        return true;
-    }
-
-    @PluginMethod
-    public void recoverWebTunnel(PluginCall call) {
-        if (!requestWebTunnelRecovery()) {
-            call.reject("WebTunnel recovery is unavailable");
-            return;
-        }
-        recoveryWaitExecutor.execute(() -> {
-            long deadline = SystemClock.elapsedRealtime() + WEBTUNNEL_RECOVERY_TIMEOUT_MS;
-            while (SystemClock.elapsedRealtime() < deadline) {
-                int socksPort = TorService.socksPort;
-                if (usingWebTunnel && TorService.STATUS_ON.equals(status) && proxyReady &&
-                        !fallbackInProgress && socksPort > 0 && socksPort <= 65535) {
-                    // STATUS_ON is emitted as soon as a circuit exists. Give
-                    // the replacement SOCKS listener and proxy override a
-                    // short stable window before opening the first onion stream.
-                    SystemClock.sleep(1_500);
-                    if (usingWebTunnel && TorService.STATUS_ON.equals(status) && proxyReady &&
-                            !fallbackInProgress && TorService.socksPort == socksPort) {
-                        call.resolve(statusResult());
-                        return;
-                    }
-                }
-                if ("WEBTUNNEL_ERROR".equals(status)) {
-                    String detail = webTunnelError == null ? "bridge setup failed" : webTunnelError;
-                    call.reject("WebTunnel recovery failed: " + detail);
-                    return;
-                }
-                // SystemClock.sleep consumes transient thread interrupts and
-                // continues waiting for the service lifecycle to finish.
-                SystemClock.sleep(500);
-            }
-            call.reject("WebTunnel recovery timed out while establishing a Tor circuit");
-        });
-    }
-
     private void applyTorProxy() {
-        int socksPort = TorService.socksPort;
-        if (socksPort < 1 || socksPort > 65535) {
-            proxyReady = false;
-            Log.e(TAG, "Tor reported ON without a valid SOCKS listener");
-            notifyStatusChange();
-            return;
-        }
         if (!WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
             Log.e(TAG, "WebView proxy override is unavailable; refusing clearnet fallback");
             return;
         }
         ProxyConfig config = new ProxyConfig.Builder()
-                .addProxyRule("socks5://127.0.0.1:" + socksPort)
+                .addProxyRule("socks5://127.0.0.1:" + SOCKS_PORT)
                 .build();
         Executor executor = runnable -> getActivity().runOnUiThread(runnable);
         ProxyController.getInstance().setProxyOverride(
@@ -415,7 +325,7 @@ public class TorPlugin extends Plugin {
                 executor,
                 () -> {
                     proxyReady = true;
-                    Log.i(TAG, "WebView is routed through embedded Tor on port " + socksPort);
+                    Log.i(TAG, "WebView is routed through embedded Tor");
                     notifyStatusChange();
                 }
         );
@@ -441,9 +351,8 @@ public class TorPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("status", status);
         result.put("host", "127.0.0.1");
-        int socksPort = TorService.socksPort;
-        result.put("port", socksPort);
-        result.put("ready", TorService.STATUS_ON.equals(status) && proxyReady && socksPort > 0);
+        result.put("port", SOCKS_PORT);
+        result.put("ready", TorService.STATUS_ON.equals(status) && proxyReady);
         result.put("transport", usingWebTunnel ? "webtunnel" : "direct");
         return result;
     }
@@ -459,13 +368,9 @@ public class TorPlugin extends Plugin {
             context.unbindService(connection);
             serviceBound = false;
         }
-        activeTorService = null;
-        if (activePlugin == this) activePlugin = null;
         mainHandler.removeCallbacks(directConnectTimeout);
         mainHandler.removeCallbacks(webTunnelConnectTimeout);
-        stopWebTunnelTransport();
         backgroundExecutor.shutdownNow();
-        recoveryWaitExecutor.shutdownNow();
         super.handleOnDestroy();
     }
 }

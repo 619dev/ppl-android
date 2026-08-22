@@ -8,7 +8,6 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(ProxyPlugin.class);
         registerPlugin(TorPlugin.class);
-        registerPlugin(TorHttpPlugin.class);
         registerPlugin(KeepAwakePlugin.class);
         registerPlugin(SecureStoragePlugin.class);
         registerPlugin(AttachmentSaverPlugin.class);
