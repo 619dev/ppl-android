@@ -22,7 +22,7 @@ interface TorRecoveryPlugin {
 const TorHttp = registerPlugin<TorHttpPlugin>('TorHttp')
 const TorRecovery = registerPlugin<TorRecoveryPlugin>('TorPlugin')
 // Includes one direct attempt, automatic WebTunnel bootstrap, and one retry.
-const NATIVE_TOR_REQUEST_TIMEOUT_MS = 145_000
+const NATIVE_TOR_REQUEST_TIMEOUT_MS = 175_000
 
 export interface HttpResponse {
   status: number
@@ -56,12 +56,17 @@ export async function torAwareFetch(url: string, options: RequestInit = {}): Pro
           return await TorHttp.request(requestOptions)
         } catch (firstError) {
           await TorRecovery.recoverWebTunnel()
-          try {
-            return await TorHttp.request(requestOptions)
-          } catch (retryError) {
-            const detail = retryError instanceof Error ? retryError.message : String(retryError)
-            throw new Error(`Tor request still failed after WebTunnel recovery: ${detail}`)
+          let retryError: unknown
+          for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+              return await TorHttp.request(requestOptions)
+            } catch (error) {
+              retryError = error
+              if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 2_000))
+            }
           }
+          const detail = retryError instanceof Error ? retryError.message : String(retryError)
+          throw new Error(`Tor request still failed after WebTunnel recovery: ${detail}`)
         }
       })(),
       new Promise<never>((_, reject) => {

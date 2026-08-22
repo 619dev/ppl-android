@@ -58,7 +58,7 @@ public class TorPlugin extends Plugin {
     private static volatile TorPlugin activePlugin;
 
     private volatile String status = TorService.STATUS_OFF;
-    private boolean proxyReady;
+    private volatile boolean proxyReady;
     private volatile boolean usingWebTunnel;
     private volatile boolean fallbackInProgress;
     private volatile String webTunnelError;
@@ -373,10 +373,17 @@ public class TorPlugin extends Plugin {
             long deadline = SystemClock.elapsedRealtime() + WEBTUNNEL_RECOVERY_TIMEOUT_MS;
             while (SystemClock.elapsedRealtime() < deadline) {
                 int socksPort = TorService.socksPort;
-                if (usingWebTunnel && TorService.STATUS_ON.equals(status) &&
-                        socksPort > 0 && socksPort <= 65535) {
-                    call.resolve(statusResult());
-                    return;
+                if (usingWebTunnel && TorService.STATUS_ON.equals(status) && proxyReady &&
+                        !fallbackInProgress && socksPort > 0 && socksPort <= 65535) {
+                    // STATUS_ON is emitted as soon as a circuit exists. Give
+                    // the replacement SOCKS listener and proxy override a
+                    // short stable window before opening the first onion stream.
+                    SystemClock.sleep(1_500);
+                    if (usingWebTunnel && TorService.STATUS_ON.equals(status) && proxyReady &&
+                            !fallbackInProgress && TorService.socksPort == socksPort) {
+                        call.resolve(statusResult());
+                        return;
+                    }
                 }
                 if ("WEBTUNNEL_ERROR".equals(status)) {
                     String detail = webTunnelError == null ? "bridge setup failed" : webTunnelError;

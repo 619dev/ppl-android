@@ -148,6 +148,8 @@ public class TorHttpPlugin extends Plugin {
             return readHttpResponse(input);
         } catch (SocketTimeoutException error) {
             throw new SocketTimeoutException(timeoutStage + " timed out");
+        } catch (EOFException error) {
+            throw new IllegalStateException(timeoutStage + " closed unexpectedly", error);
         } finally {
             try { socket.close(); } catch (Exception ignored) {}
         }
