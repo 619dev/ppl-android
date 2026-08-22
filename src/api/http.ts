@@ -1,6 +1,7 @@
 import { endSession, isExplicitLogoutSignal } from '../utils/session'
 import { useStore } from '../store'
 import { requireTorServer } from '../utils/torPolicy'
+import { torAwareFetch } from './tor-http'
 
 let refreshInFlight: Promise<string | null> | null = null
 
@@ -21,7 +22,7 @@ export async function api<T = any>(
     headers['Content-Type'] = 'application/json'
   }
 
-  let res = await fetch(`${getBase()}${path}`, { ...opts, headers })
+  let res = await torAwareFetch(`${getBase()}${path}`, { ...opts, headers })
 
   // A short-lived access token may expire while the durable device session is
   // still valid. Refresh once, share that refresh across concurrent requests,
@@ -30,7 +31,7 @@ export async function api<T = any>(
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       headers['Authorization'] = `Bearer ${refreshed}`
-      res = await fetch(`${getBase()}${path}`, { ...opts, headers })
+      res = await torAwareFetch(`${getBase()}${path}`, { ...opts, headers })
     }
   }
 
@@ -67,11 +68,11 @@ export async function refreshAccessToken(): Promise<string | null> {
   if (refreshInFlight) return refreshInFlight
   refreshInFlight = (async () => {
     try {
-      const res = await fetch(`${getBase()}/api/auth/refresh`, {
+      const res = await torAwareFetch(`${getBase()}/api/auth/refresh`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken }),
       })
-      const data = await res.json().catch(() => ({}))
+      const data = JSON.parse((await res.text()) || '{}')
       if (!res.ok || !data.token) {
         if (isExplicitLogoutSignal(data, res.headers)) endSession('session_revoked')
         return null
@@ -94,10 +95,10 @@ export function ensureRefreshToken(): Promise<void> {
   if (upgradeInFlight) return upgradeInFlight
   upgradeInFlight = (async () => {
     try {
-      const res = await fetch(`${getBase()}/api/auth/upgrade-session`, {
+      const res = await torAwareFetch(`${getBase()}/api/auth/upgrade-session`, {
         method:'POST', headers:{ Authorization:`Bearer ${localStorage.getItem('token')}` },
       })
-      const data = await res.json().catch(() => ({}))
+      const data = JSON.parse((await res.text()) || '{}')
       if (res.ok && data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token)
       else if (res.status === 401) endSession('reauth_required')
     } catch { /* offline: preserve account and retry on the next reconnect */ }
