@@ -46,7 +46,6 @@ import java.util.concurrent.Executors;
 @CapacitorPlugin(name = "TorPlugin")
 public class TorPlugin extends Plugin {
     private static final String TAG = "TorPlugin";
-    private static final int SOCKS_PORT = 9050;
     private static final long DIRECT_CONNECT_TIMEOUT_MS = 20_000;
     private static final long WEBTUNNEL_CONNECT_TIMEOUT_MS = 45_000;
     private static final String WEBTUNNEL_SETTINGS_URL =
@@ -310,12 +309,19 @@ public class TorPlugin extends Plugin {
     }
 
     private void applyTorProxy() {
+        int socksPort = TorService.socksPort;
+        if (socksPort < 1 || socksPort > 65535) {
+            proxyReady = false;
+            Log.e(TAG, "Tor reported ON without a valid SOCKS listener");
+            notifyStatusChange();
+            return;
+        }
         if (!WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
             Log.e(TAG, "WebView proxy override is unavailable; refusing clearnet fallback");
             return;
         }
         ProxyConfig config = new ProxyConfig.Builder()
-                .addProxyRule("socks5://127.0.0.1:" + SOCKS_PORT)
+                .addProxyRule("socks5://127.0.0.1:" + socksPort)
                 .build();
         Executor executor = runnable -> getActivity().runOnUiThread(runnable);
         ProxyController.getInstance().setProxyOverride(
@@ -323,7 +329,7 @@ public class TorPlugin extends Plugin {
                 executor,
                 () -> {
                     proxyReady = true;
-                    Log.i(TAG, "WebView is routed through embedded Tor");
+                    Log.i(TAG, "WebView is routed through embedded Tor on port " + socksPort);
                     notifyStatusChange();
                 }
         );
@@ -349,8 +355,9 @@ public class TorPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("status", status);
         result.put("host", "127.0.0.1");
-        result.put("port", SOCKS_PORT);
-        result.put("ready", TorService.STATUS_ON.equals(status) && proxyReady);
+        int socksPort = TorService.socksPort;
+        result.put("port", socksPort);
+        result.put("ready", TorService.STATUS_ON.equals(status) && proxyReady && socksPort > 0);
         result.put("transport", usingWebTunnel ? "webtunnel" : "direct");
         return result;
     }

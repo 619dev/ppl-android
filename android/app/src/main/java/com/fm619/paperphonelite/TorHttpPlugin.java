@@ -8,6 +8,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import org.torproject.jni.TorService;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,7 +29,6 @@ import java.util.concurrent.Executors;
 @CapacitorPlugin(name = "TorHttp")
 public class TorHttpPlugin extends Plugin {
     private static final String TAG = "TorHttp";
-    private static final int SOCKS_PORT = 9050;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     @PluginMethod
@@ -57,7 +58,11 @@ public class TorHttpPlugin extends Plugin {
         executor.execute(() -> {
             HttpURLConnection connection = null;
             try {
-                Proxy tor = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", SOCKS_PORT));
+                int socksPort = TorService.socksPort;
+                if (socksPort < 1 || socksPort > 65535) {
+                    throw new IllegalStateException("Tor SOCKS listener is not ready");
+                }
+                Proxy tor = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", socksPort));
                 connection = (HttpURLConnection) url.openConnection(tor);
                 connection.setConnectTimeout(30_000);
                 connection.setReadTimeout(45_000);
