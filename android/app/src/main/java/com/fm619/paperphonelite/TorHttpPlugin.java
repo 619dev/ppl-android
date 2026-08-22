@@ -32,8 +32,6 @@ import javax.net.ssl.SSLSocketFactory;
 public class TorHttpPlugin extends Plugin {
     private static final String TAG = "TorHttp";
     private static final int ONION_IO_TIMEOUT_MS = 30_000;
-    private static final long WEBTUNNEL_RECOVERY_TIMEOUT_MS = 75_000;
-    private static final int MAX_ATTEMPTS = 2;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     @PluginMethod
@@ -60,7 +58,7 @@ public class TorHttpPlugin extends Plugin {
 
         executor.execute(() -> {
             try {
-                NativeResponse response = execute(url, method, headers, body);
+                NativeResponse response = executeOnce(url, method, headers, body);
                 JSObject responseHeaders = new JSObject();
                 for (Map.Entry<String, String> entry : response.headers.entrySet()) {
                     responseHeaders.put(entry.getKey(), entry.getValue());
@@ -72,37 +70,14 @@ public class TorHttpPlugin extends Plugin {
                 call.resolve(result);
             } catch (Exception error) {
                 Log.e(TAG, "Onion request failed", error);
-                call.reject("Tor request failed: " + error.getMessage(), error);
+                String detail = error.getMessage();
+                if (detail == null || detail.trim().isEmpty()) detail = error.getClass().getSimpleName();
+                // Do not pass the Throwable to Capacitor here: some Android
+                // interruption exceptions have a null localized message which
+                // can replace the useful rejection text on the JS side.
+                call.reject("Tor request failed: " + detail);
             }
         });
-    }
-
-    private static NativeResponse execute(URL url, String method, JSObject headers, String body) throws Exception {
-        Exception lastError = null;
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            try {
-                return executeOnce(url, method, headers, body);
-            } catch (SocksReplyException error) {
-                lastError = error;
-                // Host/network unreachable and TTL-expired replies can be
-                // circuit-specific. Give Tor a chance to build a fresh stream.
-                if (error.code != 0x04 && error.code != 0x06) throw error;
-            } catch (SocketTimeoutException error) {
-                lastError = error;
-            }
-            if (attempt < MAX_ATTEMPTS) {
-                // A healthy generic Tor circuit does not prove that onion
-                // streams work on the current network. Replace the bridge and
-                // retry the original request through the fresh WebTunnel.
-                boolean recovering = TorPlugin.requestWebTunnelRecovery();
-                if (!recovering || !TorPlugin.awaitWebTunnelReady(WEBTUNNEL_RECOVERY_TIMEOUT_MS)) {
-                    TorPlugin.refreshOnionRoute(url.getHost());
-                    Thread.sleep(2_000L);
-                }
-            }
-        }
-        throw new IllegalStateException("Onion service unreachable after " + MAX_ATTEMPTS + " Tor attempts: " +
-                (lastError == null ? "unknown error" : lastError.getMessage()), lastError);
     }
 
     private static NativeResponse executeOnce(URL url, String method, JSObject headers, String body) throws Exception {

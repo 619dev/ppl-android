@@ -12,6 +12,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
@@ -52,6 +53,7 @@ public class TorPlugin extends Plugin {
     private static final String WEBTUNNEL_SETTINGS_URL =
             "https://bridges.torproject.org/moat/circumvention/settings";
     private static final String WEBTUNNEL_CACHE_KEY = "webtunnel_bridge";
+    private static final long WEBTUNNEL_RECOVERY_TIMEOUT_MS = 75_000;
     private static volatile TorService activeTorService;
     private static volatile TorPlugin activePlugin;
 
@@ -59,10 +61,12 @@ public class TorPlugin extends Plugin {
     private boolean proxyReady;
     private volatile boolean usingWebTunnel;
     private volatile boolean fallbackInProgress;
+    private volatile String webTunnelError;
     private boolean receiverRegistered;
     private boolean serviceBound;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService recoveryWaitExecutor = Executors.newCachedThreadPool();
     private Controller transportController;
 
     private final Runnable directConnectTimeout = () -> {
@@ -177,6 +181,7 @@ public class TorPlugin extends Plugin {
 
     private void startWebTunnelFallback() {
         fallbackInProgress = true;
+        webTunnelError = null;
         status = "FETCHING_WEBTUNNEL";
         notifyStatusChange();
 
@@ -201,6 +206,8 @@ public class TorPlugin extends Plugin {
                 Log.e(TAG, "Unable to configure WebTunnel", error);
                 mainHandler.post(() -> {
                     fallbackInProgress = false;
+                    webTunnelError = error.getMessage() == null
+                            ? error.getClass().getSimpleName() : error.getMessage();
                     status = "WEBTUNNEL_ERROR";
                     notifyStatusChange();
                 });
@@ -356,19 +363,32 @@ public class TorPlugin extends Plugin {
         return true;
     }
 
-    /** Wait from a background plugin thread until the replacement SOCKS route is ready. */
-    static boolean awaitWebTunnelReady(long timeoutMs) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + timeoutMs;
-        while (System.currentTimeMillis() < deadline) {
-            TorPlugin plugin = activePlugin;
-            int socksPort = TorService.socksPort;
-            if (plugin != null && plugin.usingWebTunnel &&
-                    TorService.STATUS_ON.equals(plugin.status) && socksPort > 0 && socksPort <= 65535) {
-                return true;
-            }
-            Thread.sleep(500);
+    @PluginMethod
+    public void recoverWebTunnel(PluginCall call) {
+        if (!requestWebTunnelRecovery()) {
+            call.reject("WebTunnel recovery is unavailable");
+            return;
         }
-        return false;
+        recoveryWaitExecutor.execute(() -> {
+            long deadline = SystemClock.elapsedRealtime() + WEBTUNNEL_RECOVERY_TIMEOUT_MS;
+            while (SystemClock.elapsedRealtime() < deadline) {
+                int socksPort = TorService.socksPort;
+                if (usingWebTunnel && TorService.STATUS_ON.equals(status) &&
+                        socksPort > 0 && socksPort <= 65535) {
+                    call.resolve(statusResult());
+                    return;
+                }
+                if ("WEBTUNNEL_ERROR".equals(status)) {
+                    String detail = webTunnelError == null ? "bridge setup failed" : webTunnelError;
+                    call.reject("WebTunnel recovery failed: " + detail);
+                    return;
+                }
+                // SystemClock.sleep consumes transient thread interrupts and
+                // continues waiting for the service lifecycle to finish.
+                SystemClock.sleep(500);
+            }
+            call.reject("WebTunnel recovery timed out while establishing a Tor circuit");
+        });
     }
 
     private void applyTorProxy() {
@@ -441,6 +461,7 @@ public class TorPlugin extends Plugin {
         mainHandler.removeCallbacks(directConnectTimeout);
         mainHandler.removeCallbacks(webTunnelConnectTimeout);
         backgroundExecutor.shutdownNow();
+        recoveryWaitExecutor.shutdownNow();
         super.handleOnDestroy();
     }
 }
