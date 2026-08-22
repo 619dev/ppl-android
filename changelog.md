@@ -8,10 +8,14 @@ This file records Android releases of `ppl-android` based on [619dev/PaperPhoneL
 
 - 修复“扫一扫”启动即崩溃，增强 WebView 扫码路径容错与生命周期清理，避免 Android 首次打开扫描页时报错退出。
 - 清理已废弃的原生扫码兼容样式，统一使用前端扫描与 F-Droid 兼容实现。
+- 修复 Tor 尚未完成引导时被误报为可用并导致登录 `Failed to fetch`：现在等待引导达到 100% 后才启用 WebView 代理。
+- WebTunnel bridge 强制补充 `utls=none`，并在 WebTunnel 重启前清理可安全重建的过期 Tor 目录共识缓存；真机验证已恢复 onion 登录与会话加载。
 - npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.18`（`versionCode 30018`）。
 
 - Fixed a crash that occurred when opening the QR scan flow, with improved WebView scanner error handling and lifecycle cleanup to prevent immediate termination.
 - Removed obsolete native-scanner compatibility styles and aligned on the pure frontend scanner path for F-Droid compliance.
+- Fixed Tor being reported as ready before bootstrap completed, which caused login to fail with `Failed to fetch`; the WebView proxy is now enabled only after bootstrap reaches 100%.
+- Enforced `utls=none` on WebTunnel bridges and clear only rebuildable stale Tor directory-consensus caches before WebTunnel restart; onion login and conversation loading were verified on a physical device.
 - Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.18` (`versionCode 30018`).
 
 ## 3.0.15 — 2026-08-21

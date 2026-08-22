@@ -27,8 +27,9 @@ PaperPhoneLite 3.x **不提供**朋友圈、公开时间线、单聊或群聊语
 ## Tor 与网络边界
 
 - APK 内嵌 Guardian Project `tor-android 0.4.8.17.2`，支持 `arm64-v8a`、`armeabi-v7a`、`x86` 和 `x86_64`。
-- 原生 Tor 服务监听本机 SOCKS5 `127.0.0.1:9050`；建立线路后，Android WebView 代理切换到该端口。
-- 直接 Tor 连接 20 秒内无法建立线路时，客户端会从 Tor Project 官方 circumvention settings 接口获取当前 WebTunnel bridge，通过内嵌 IPtProxy/Lyrebird 重启 Tor；上次成功获取的 bridge 可在接口暂时不可用时回退使用。
+- 原生 Tor 服务监听本机 SOCKS5 `127.0.0.1:9050`；只有 Tor 引导进度达到 100% 后，Android WebView 代理才切换到该端口，避免线路尚未可用时误报成功并发送登录请求。
+- 直接 Tor 连接 20 秒内无法建立线路时，客户端会从 Tor Project 官方 circumvention settings 接口获取当前 WebTunnel bridge，通过内嵌 IPtProxy/Lyrebird 重启 Tor；bridge 会规范化为 `utls=none`，上次成功获取的 bridge 可在接口暂时不可用时回退使用。
+- WebTunnel 重启前会清理可安全重建的 Tor 目录共识缓存，避免过期共识使引导长期停滞；不会清除账号、消息或密钥数据。
 - 生产构建只接受规范的 v3 `.onion` 服务地址；Vite 开发模式额外允许回环地址。
 - 原生代理桥拒绝清除 Tor 代理或替换为其他代理。浏览器开发模式不能由 JavaScript 强制代理，不属于受支持的生产发行方式。
 - Tor 可隐藏网络来源，但不能保证绝对匿名，也不能消除设备、账号行为、通知服务或主动披露造成的关联。

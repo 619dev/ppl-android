@@ -1,0 +1,3 @@
+修复打开“扫一扫”时崩溃，继续使用不含 Google 组件的内置开源二维码解码。
+修复 Tor 尚未完成引导时登录失败；仅在 Tor 达到 100% 后启用 WebView 代理。
+WebTunnel bridge 强制使用 utls=none，并自动清理可重建的过期 Tor 目录共识缓存。

@@ -1,0 +1,3 @@
+Fixed a crash when opening QR scanning while retaining the bundled FOSS decoder with no Google components.
+Fixed login attempts before Tor bootstrap completed; the WebView proxy is enabled only at 100%.
+WebTunnel bridges now enforce utls=none and rebuild stale Tor directory-consensus caches automatically.

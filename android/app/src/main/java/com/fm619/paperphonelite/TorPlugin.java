@@ -41,6 +41,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Starts the bundled Tor daemon and routes all WebView traffic through it. */
 @CapacitorPlugin(name = "TorPlugin")
@@ -52,6 +54,11 @@ public class TorPlugin extends Plugin {
     private static final String WEBTUNNEL_SETTINGS_URL =
             "https://bridges.torproject.org/moat/circumvention/settings";
     private static final String WEBTUNNEL_CACHE_KEY = "webtunnel_bridge";
+    private static final String WEBTUNNEL_RECOVERY_BRIDGE =
+            "webtunnel [2001:db8:ff6a:3189:e53b:c8d6:9668:9374]:443 " +
+            "4AB7BC0386FF75EF7DB54C01F0F50C4F38169BEC " +
+            "url=https://ame.neverfeltsogood.top/gYuE1shom2 ver=0.0.5";
+    private static final Pattern BOOTSTRAP_PROGRESS_PATTERN = Pattern.compile("PROGRESS=(\\d{1,3})");
 
     private String status = TorService.STATUS_OFF;
     private boolean proxyReady;
@@ -59,9 +66,33 @@ public class TorPlugin extends Plugin {
     private boolean fallbackInProgress;
     private boolean receiverRegistered;
     private boolean serviceBound;
+    private int bootstrapProgress;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
     private Controller transportController;
+    private TorService torService;
+
+    private final Runnable bootstrapPoll = new Runnable() {
+        @Override
+        public void run() {
+            TorService service = torService;
+            if (service == null || !serviceBound) return;
+            backgroundExecutor.execute(() -> {
+                int progress = readBootstrapProgress(service);
+                mainHandler.post(() -> {
+                    if (service != torService || !serviceBound) return;
+                    bootstrapProgress = progress;
+                    if (progress >= 100) {
+                        if (!proxyReady) applyTorProxy();
+                    } else {
+                        proxyReady = false;
+                        notifyStatusChange();
+                        mainHandler.postDelayed(this, 1_000);
+                    }
+                });
+            });
+        }
+    };
 
     private final Runnable directConnectTimeout = () -> {
         if (!TorService.STATUS_ON.equals(status) && !fallbackInProgress && !usingWebTunnel) {
@@ -91,7 +122,7 @@ public class TorPlugin extends Plugin {
                 fallbackInProgress = false;
                 mainHandler.removeCallbacks(directConnectTimeout);
                 mainHandler.removeCallbacks(webTunnelConnectTimeout);
-                applyTorProxy();
+                startBootstrapPolling();
             } else {
                 notifyStatusChange();
             }
@@ -102,12 +133,16 @@ public class TorPlugin extends Plugin {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             serviceBound = true;
+            torService = ((TorService.LocalBinder) binder).getService();
             Log.i(TAG, "Embedded Tor service connected");
+            startBootstrapPolling();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             serviceBound = false;
+            torService = null;
+            mainHandler.removeCallbacks(bootstrapPoll);
             status = TorService.STATUS_OFF;
         }
     };
@@ -159,6 +194,7 @@ public class TorPlugin extends Plugin {
         usingWebTunnel = false;
         fallbackInProgress = false;
         proxyReady = false;
+        bootstrapProgress = 0;
         status = TorService.STATUS_STARTING;
         TorService.getTorrc(getContext()).delete();
         notifyStatusChange();
@@ -222,6 +258,9 @@ public class TorPlugin extends Plugin {
             connection.disconnect();
         }
 
+        String cached = getContext().getSharedPreferences("tor_transport", Context.MODE_PRIVATE)
+                .getString(WEBTUNNEL_CACHE_KEY, null);
+        String firstValid = null;
         JSONArray settings = new JSONObject(response).optJSONArray("settings");
         if (settings == null) return null;
         for (int i = 0; i < settings.length(); i++) {
@@ -232,19 +271,37 @@ public class TorPlugin extends Plugin {
             for (int j = 0; j < bridgeStrings.length(); j++) {
                 String bridge = validateWebTunnelBridge(bridgeStrings.optString(j));
                 if (bridge != null) {
+                    if (firstValid == null) firstValid = bridge;
+                    // Rotate away from the last bridge when Moat offers another
+                    // candidate. A bridge can connect while serving no usable
+                    // consensus, which otherwise leaves bootstrap stuck at 30%.
+                    if (bridge.equals(cached)) continue;
                     getContext().getSharedPreferences("tor_transport", Context.MODE_PRIVATE)
                             .edit().putString(WEBTUNNEL_CACHE_KEY, bridge).apply();
                     return bridge;
                 }
             }
         }
-        return null;
+        if (firstValid != null) {
+            getContext().getSharedPreferences("tor_transport", Context.MODE_PRIVATE)
+                    .edit().putString(WEBTUNNEL_CACHE_KEY, firstValid).apply();
+        }
+        return firstValid;
     }
 
     private String loadCachedWebTunnelBridge() {
         String bridge = getContext().getSharedPreferences("tor_transport", Context.MODE_PRIVATE)
                 .getString(WEBTUNNEL_CACHE_KEY, null);
-        return validateWebTunnelBridge(bridge);
+        String validated = validateWebTunnelBridge(bridge);
+        // This bridge was observed repeatedly returning "Consensus is too old"
+        // on 2026-08-22. Use the other bridge from the same official Moat
+        // response when censorship prevents refreshing the list on-device.
+        if (validated != null && validated.contains("2FE716635FDCAF4A70DFCEA70242014EECDFDF8B")) {
+            validated = validateWebTunnelBridge(WEBTUNNEL_RECOVERY_BRIDGE);
+            getContext().getSharedPreferences("tor_transport", Context.MODE_PRIVATE)
+                    .edit().putString(WEBTUNNEL_CACHE_KEY, validated).apply();
+        }
+        return validated;
     }
 
     private String validateWebTunnelBridge(String bridge) {
@@ -294,6 +351,7 @@ public class TorPlugin extends Plugin {
     private void restartTorWithWebTunnel() {
         mainHandler.removeCallbacks(directConnectTimeout);
         stopEmbeddedTor();
+        clearTorDirectoryCache();
         usingWebTunnel = true;
         status = "STARTING_WEBTUNNEL";
         notifyStatusChange();
@@ -302,13 +360,49 @@ public class TorPlugin extends Plugin {
         mainHandler.postDelayed(webTunnelConnectTimeout, WEBTUNNEL_CONNECT_TIMEOUT_MS);
     }
 
+    private void clearTorDirectoryCache() {
+        File dataDir = new File(getContext().getDir("TorService", Context.MODE_PRIVATE), "data");
+        String[] staleDirectoryFiles = {
+                "cached-certs",
+                "cached-consensus",
+                "cached-microdesc-consensus",
+                "cached-microdescs",
+                "cached-microdescs.new"
+        };
+        for (String name : staleDirectoryFiles) {
+            File file = new File(dataDir, name);
+            if (file.exists() && !file.delete()) {
+                Log.w(TAG, "Unable to remove stale Tor directory cache: " + name);
+            }
+        }
+    }
+
     private void stopEmbeddedTor() {
         Context context = getContext();
+        mainHandler.removeCallbacks(bootstrapPoll);
+        torService = null;
         if (serviceBound) {
             context.unbindService(connection);
             serviceBound = false;
         }
         context.stopService(new Intent(context, TorService.class));
+    }
+
+    private void startBootstrapPolling() {
+        if (!TorService.STATUS_ON.equals(status) || torService == null || !serviceBound) return;
+        mainHandler.removeCallbacks(bootstrapPoll);
+        mainHandler.post(bootstrapPoll);
+    }
+
+    private int readBootstrapProgress(TorService service) {
+        try {
+            String phase = service.getInfo("status/bootstrap-phase");
+            Matcher matcher = BOOTSTRAP_PROGRESS_PATTERN.matcher(phase == null ? "" : phase);
+            if (matcher.find()) return Math.min(100, Integer.parseInt(matcher.group(1)));
+        } catch (Exception error) {
+            Log.w(TAG, "Unable to read Tor bootstrap progress", error);
+        }
+        return 0;
     }
 
     private void applyTorProxy() {
@@ -353,6 +447,7 @@ public class TorPlugin extends Plugin {
         result.put("host", "127.0.0.1");
         result.put("port", SOCKS_PORT);
         result.put("ready", TorService.STATUS_ON.equals(status) && proxyReady);
+        result.put("bootstrap", bootstrapProgress);
         result.put("transport", usingWebTunnel ? "webtunnel" : "direct");
         return result;
     }

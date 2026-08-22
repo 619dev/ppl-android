@@ -27,8 +27,9 @@ PaperPhoneLite 3.x does **not** provide Moments, a public Timeline, direct or gr
 ## Tor and Network Boundary
 
 - The APK bundles Guardian Project `tor-android 0.4.8.17.2` for `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64`.
-- The native Tor service exposes SOCKS5 on `127.0.0.1:9050`; the Android WebView proxy switches to it after a Tor circuit is established.
-- If direct Tor cannot establish a circuit within 20 seconds, the client fetches a current WebTunnel bridge from Tor Project's official circumvention-settings endpoint and restarts Tor through bundled IPtProxy/Lyrebird; the last successfully fetched bridge is retained as a temporary fallback.
+- The native Tor service exposes SOCKS5 on `127.0.0.1:9050`; the Android WebView proxy switches to it only after Tor reaches 100% bootstrap, preventing login requests while the circuit is not yet usable.
+- If direct Tor cannot establish a circuit within 20 seconds, the client fetches a current WebTunnel bridge from Tor Project's official circumvention-settings endpoint and restarts Tor through bundled IPtProxy/Lyrebird. Bridges are normalized with `utls=none`, and the last successfully fetched bridge is retained as a temporary fallback.
+- Before a WebTunnel restart, the client removes only rebuildable Tor directory-consensus caches so stale consensus data cannot leave bootstrap stalled; account, message, and key data are not cleared.
 - Production builds accept only valid v3 `.onion` server addresses. Vite development additionally permits loopback addresses.
 - The native proxy bridge refuses requests to clear Tor or replace it with another proxy. Browser development cannot enforce a proxy from JavaScript and is not a supported production distribution.
 - Tor can conceal network origin, but cannot guarantee absolute anonymity or prevent correlation through a device, account behavior, notification provider, or voluntary disclosure.
