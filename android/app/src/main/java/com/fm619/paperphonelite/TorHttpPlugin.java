@@ -31,6 +31,8 @@ import javax.net.ssl.SSLSocketFactory;
 @CapacitorPlugin(name = "TorHttp")
 public class TorHttpPlugin extends Plugin {
     private static final String TAG = "TorHttp";
+    private static final int ONION_IO_TIMEOUT_MS = 30_000;
+    private static final int MAX_ATTEMPTS = 2;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     @PluginMethod
@@ -76,7 +78,7 @@ public class TorHttpPlugin extends Plugin {
 
     private static NativeResponse execute(URL url, String method, JSObject headers, String body) throws Exception {
         Exception lastError = null;
-        for (int attempt = 1; attempt <= 3; attempt++) {
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
                 return executeOnce(url, method, headers, body);
             } catch (SocksReplyException error) {
@@ -87,9 +89,12 @@ public class TorHttpPlugin extends Plugin {
             } catch (SocketTimeoutException error) {
                 lastError = error;
             }
-            if (attempt < 3) Thread.sleep(attempt * 2_000L);
+            if (attempt < MAX_ATTEMPTS) {
+                TorPlugin.refreshOnionRoute(url.getHost());
+                Thread.sleep(2_000L);
+            }
         }
-        throw new IllegalStateException("Onion service unreachable after 3 Tor attempts: " +
+        throw new IllegalStateException("Onion service unreachable after " + MAX_ATTEMPTS + " Tor attempts: " +
                 (lastError == null ? "unknown error" : lastError.getMessage()), lastError);
     }
 
@@ -105,7 +110,7 @@ public class TorHttpPlugin extends Plugin {
         String timeoutStage = "local Tor SOCKS listener";
         try {
             socket.connect(new InetSocketAddress("127.0.0.1", socksPort), 5_000);
-            socket.setSoTimeout(120_000);
+            socket.setSoTimeout(ONION_IO_TIMEOUT_MS);
             DataInputStream input = new DataInputStream(socket.getInputStream());
             OutputStream output = socket.getOutputStream();
 
@@ -134,7 +139,7 @@ public class TorHttpPlugin extends Plugin {
 
             if ("https".equals(url.getProtocol())) {
                 socket = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(socket, host, targetPort, true);
-                socket.setSoTimeout(120_000);
+                socket.setSoTimeout(ONION_IO_TIMEOUT_MS);
                 input = new DataInputStream(socket.getInputStream());
                 output = socket.getOutputStream();
             }

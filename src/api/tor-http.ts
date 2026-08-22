@@ -16,6 +16,7 @@ interface TorHttpPlugin {
 }
 
 const TorHttp = registerPlugin<TorHttpPlugin>('TorHttp')
+const NATIVE_TOR_REQUEST_TIMEOUT_MS = 70_000
 
 export interface HttpResponse {
   status: number
@@ -35,19 +36,32 @@ export async function torAwareFetch(url: string, options: RequestInit = {}): Pro
 
   const headers: Record<string, string> = {}
   new Headers(options.headers).forEach((value, name) => { headers[name] = value })
-  const response = await TorHttp.request({
-    url,
-    method: options.method || 'GET',
-    headers,
-    body: options.body as string | undefined,
-  })
-  const responseHeaders = Object.fromEntries(
-    Object.entries(response.headers || {}).map(([name, value]) => [name.toLowerCase(), value]),
-  )
-  return {
-    status: response.status,
-    ok: response.status >= 200 && response.status < 300,
-    text: async () => response.body || '',
-    headers: new Headers(responseHeaders),
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  try {
+    const response = await Promise.race([
+      TorHttp.request({
+        url,
+        method: options.method || 'GET',
+        headers,
+        body: options.body as string | undefined,
+      }),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error('Tor request timed out after 70 seconds')),
+          NATIVE_TOR_REQUEST_TIMEOUT_MS,
+        )
+      }),
+    ])
+    const responseHeaders = Object.fromEntries(
+      Object.entries(response.headers || {}).map(([name, value]) => [name.toLowerCase(), value]),
+    )
+    return {
+      status: response.status,
+      ok: response.status >= 200 && response.status < 300,
+      text: async () => response.body || '',
+      headers: new Headers(responseHeaders),
+    }
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId)
   }
 }

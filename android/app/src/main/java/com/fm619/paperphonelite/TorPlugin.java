@@ -26,6 +26,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import org.torproject.jni.TorService;
+import net.freehaven.tor.control.TorControlConnection;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,6 +52,7 @@ public class TorPlugin extends Plugin {
     private static final String WEBTUNNEL_SETTINGS_URL =
             "https://bridges.torproject.org/moat/circumvention/settings";
     private static final String WEBTUNNEL_CACHE_KEY = "webtunnel_bridge";
+    private static volatile TorService activeTorService;
 
     private String status = TorService.STATUS_OFF;
     private boolean proxyReady;
@@ -101,12 +103,16 @@ public class TorPlugin extends Plugin {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             serviceBound = true;
+            if (binder instanceof TorService.LocalBinder) {
+                activeTorService = ((TorService.LocalBinder) binder).getService();
+            }
             Log.i(TAG, "Embedded Tor service connected");
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             serviceBound = false;
+            activeTorService = null;
             status = TorService.STATUS_OFF;
         }
     };
@@ -305,7 +311,27 @@ public class TorPlugin extends Plugin {
             context.unbindService(connection);
             serviceBound = false;
         }
+        activeTorService = null;
         context.stopService(new Intent(context, TorService.class));
+    }
+
+    /** Refresh client circuits and the hidden-service descriptor after a routing failure. */
+    static synchronized boolean refreshOnionRoute(String onionHost) {
+        TorService service = activeTorService;
+        if (service == null) return false;
+        try {
+            TorControlConnection control = service.getTorControlConnection();
+            if (control == null) return false;
+            control.signal("NEWNYM");
+            if (onionHost != null && onionHost.endsWith(".onion")) {
+                control.hsFetch(onionHost.substring(0, onionHost.length() - ".onion".length()));
+            }
+            Log.i(TAG, "Refreshed Tor route and onion descriptor after request failure");
+            return true;
+        } catch (Exception error) {
+            Log.w(TAG, "Unable to request a fresh Tor identity", error);
+            return false;
+        }
     }
 
     private void applyTorProxy() {
@@ -373,6 +399,7 @@ public class TorPlugin extends Plugin {
             context.unbindService(connection);
             serviceBound = false;
         }
+        activeTorService = null;
         mainHandler.removeCallbacks(directConnectTimeout);
         mainHandler.removeCallbacks(webTunnelConnectTimeout);
         backgroundExecutor.shutdownNow();
