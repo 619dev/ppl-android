@@ -68,6 +68,15 @@ public class TorPlugin extends Plugin {
     private final ExecutorService backgroundExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService recoveryWaitExecutor = Executors.newCachedThreadPool();
     private Controller transportController;
+    // gomobile keeps only a native reference to this callback. Retain the Java
+    // object for the entire plugin lifetime so Go cannot call a collected ref.
+    private final OnTransportEvents transportEvents = new OnTransportEvents() {
+        @Override public void connected(String name) { Log.i(TAG, "WebTunnel transport connected"); }
+        @Override public void error(String name, Exception error) { Log.e(TAG, "WebTunnel transport error", error); }
+        @Override public void stopped(String name, Exception error) {
+            if (error != null) Log.e(TAG, "WebTunnel transport stopped", error);
+        }
+    };
 
     private final Runnable directConnectTimeout = () -> {
         if (!TorService.STATUS_ON.equals(status) && !fallbackInProgress && !usingWebTunnel) {
@@ -159,13 +168,7 @@ public class TorPlugin extends Plugin {
     private void startDirectTor() {
         boolean restartRequired = serviceBound;
         mainHandler.removeCallbacks(webTunnelConnectTimeout);
-        if (transportController != null) {
-            try {
-                transportController.stop(IPtProxy.Webtunnel);
-            } catch (Exception error) {
-                Log.w(TAG, "Unable to stop previous WebTunnel transport", error);
-            }
-        }
+        stopWebTunnelTransport();
         if (restartRequired) stopEmbeddedTor();
         usingWebTunnel = false;
         fallbackInProgress = false;
@@ -191,13 +194,7 @@ public class TorPlugin extends Plugin {
                 if (bridge == null) bridge = loadCachedWebTunnelBridge();
                 if (bridge == null) throw new IllegalStateException("No WebTunnel bridge is available");
 
-                if (usingWebTunnel && transportController != null) {
-                    try {
-                        transportController.stop(IPtProxy.Webtunnel);
-                    } catch (Exception error) {
-                        Log.w(TAG, "Unable to stop stale WebTunnel transport", error);
-                    }
-                }
+                if (usingWebTunnel) stopWebTunnelTransport();
                 long transportPort = startWebTunnelTransport();
                 writeWebTunnelTorrc(bridge, transportPort);
 
@@ -278,23 +275,29 @@ public class TorPlugin extends Plugin {
         return value;
     }
 
-    private long startWebTunnelTransport() throws Exception {
+    private synchronized void stopWebTunnelTransport() {
+        Controller controller = transportController;
+        // Never reuse a Controller after stop(): its gomobile Go ref is no
+        // longer valid even though the Java wrapper still exists.
+        transportController = null;
+        if (controller == null) return;
+        try {
+            controller.stop(IPtProxy.Webtunnel);
+        } catch (Exception error) {
+            Log.w(TAG, "Unable to stop previous WebTunnel transport", error);
+        }
+        SystemClock.sleep(250);
+    }
+
+    private synchronized long startWebTunnelTransport() throws Exception {
         File stateDir = new File(getContext().getCacheDir(), "webtunnel-pt");
         if (!stateDir.exists() && !stateDir.mkdirs()) {
             throw new IllegalStateException("Unable to create WebTunnel state directory");
         }
-        if (transportController == null) {
-            transportController = new Controller(
-                    stateDir.getAbsolutePath(), true, false, "INFO",
-                    new OnTransportEvents() {
-                        @Override public void connected(String name) { Log.i(TAG, "WebTunnel transport connected"); }
-                        @Override public void error(String name, Exception error) { Log.e(TAG, "WebTunnel transport error", error); }
-                        @Override public void stopped(String name, Exception error) {
-                            if (error != null) Log.e(TAG, "WebTunnel transport stopped", error);
-                        }
-                    }
-            );
-        }
+        if (transportController != null) stopWebTunnelTransport();
+        transportController = new Controller(
+                stateDir.getAbsolutePath(), true, false, "INFO", transportEvents
+        );
         transportController.start(IPtProxy.Webtunnel, null);
         long port = transportController.port(IPtProxy.Webtunnel);
         if (port < 1 || port > 65535) throw new IllegalStateException("Invalid WebTunnel transport port");
@@ -467,6 +470,7 @@ public class TorPlugin extends Plugin {
         if (activePlugin == this) activePlugin = null;
         mainHandler.removeCallbacks(directConnectTimeout);
         mainHandler.removeCallbacks(webTunnelConnectTimeout);
+        stopWebTunnelTransport();
         backgroundExecutor.shutdownNow();
         recoveryWaitExecutor.shutdownNow();
         super.handleOnDestroy();
