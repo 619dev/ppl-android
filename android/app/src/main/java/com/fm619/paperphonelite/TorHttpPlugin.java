@@ -75,6 +75,25 @@ public class TorHttpPlugin extends Plugin {
     }
 
     private static NativeResponse execute(URL url, String method, JSObject headers, String body) throws Exception {
+        Exception lastError = null;
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                return executeOnce(url, method, headers, body);
+            } catch (SocksReplyException error) {
+                lastError = error;
+                // Host/network unreachable and TTL-expired replies can be
+                // circuit-specific. Give Tor a chance to build a fresh stream.
+                if (error.code != 0x04 && error.code != 0x06) throw error;
+            } catch (SocketTimeoutException error) {
+                lastError = error;
+            }
+            if (attempt < 3) Thread.sleep(attempt * 2_000L);
+        }
+        throw new IllegalStateException("Onion service unreachable after 3 Tor attempts: " +
+                (lastError == null ? "unknown error" : lastError.getMessage()), lastError);
+    }
+
+    private static NativeResponse executeOnce(URL url, String method, JSObject headers, String body) throws Exception {
         int socksPort = TorService.socksPort;
         if (socksPort < 1 || socksPort > 65535) throw new IllegalStateException("Tor SOCKS listener is not ready");
         int targetPort = url.getPort() > 0 ? url.getPort() : ("https".equals(url.getProtocol()) ? 443 : 80);
@@ -109,7 +128,8 @@ public class TorHttpPlugin extends Plugin {
             int reply = input.readUnsignedByte();
             input.readUnsignedByte();
             int addressType = input.readUnsignedByte();
-            if (version != 0x05 || reply != 0x00) throw new IllegalStateException("Tor SOCKS connection failed (code " + reply + ")");
+            if (version != 0x05) throw new IllegalStateException("Invalid Tor SOCKS response version");
+            if (reply != 0x00) throw new SocksReplyException(reply);
             skipSocksAddress(input, addressType);
 
             if ("https".equals(url.getProtocol())) {
@@ -234,6 +254,14 @@ public class TorHttpPlugin extends Plugin {
             this.status = status;
             this.body = body;
             this.headers = headers;
+        }
+    }
+
+    private static class SocksReplyException extends Exception {
+        final int code;
+        SocksReplyException(int code) {
+            super("Tor SOCKS connection failed (code " + code + ")");
+            this.code = code;
         }
     }
 
