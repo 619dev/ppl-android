@@ -16,7 +16,8 @@ interface TorHttpPlugin {
 }
 
 const TorHttp = registerPlugin<TorHttpPlugin>('TorHttp')
-const NATIVE_TOR_REQUEST_TIMEOUT_MS = 70_000
+// Includes one direct attempt, automatic WebTunnel bootstrap, and one retry.
+const NATIVE_TOR_REQUEST_TIMEOUT_MS = 145_000
 
 export interface HttpResponse {
   status: number
@@ -47,7 +48,7 @@ export async function torAwareFetch(url: string, options: RequestInit = {}): Pro
       }),
       new Promise<never>((_, reject) => {
         timeoutId = setTimeout(
-          () => reject(new Error('Tor request timed out after 70 seconds')),
+          () => reject(new Error('Tor request timed out after automatic WebTunnel recovery')),
           NATIVE_TOR_REQUEST_TIMEOUT_MS,
         )
       }),

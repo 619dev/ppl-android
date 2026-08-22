@@ -32,6 +32,7 @@ import javax.net.ssl.SSLSocketFactory;
 public class TorHttpPlugin extends Plugin {
     private static final String TAG = "TorHttp";
     private static final int ONION_IO_TIMEOUT_MS = 30_000;
+    private static final long WEBTUNNEL_RECOVERY_TIMEOUT_MS = 75_000;
     private static final int MAX_ATTEMPTS = 2;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -90,8 +91,14 @@ public class TorHttpPlugin extends Plugin {
                 lastError = error;
             }
             if (attempt < MAX_ATTEMPTS) {
-                TorPlugin.refreshOnionRoute(url.getHost());
-                Thread.sleep(2_000L);
+                // A healthy generic Tor circuit does not prove that onion
+                // streams work on the current network. Replace the bridge and
+                // retry the original request through the fresh WebTunnel.
+                boolean recovering = TorPlugin.requestWebTunnelRecovery();
+                if (!recovering || !TorPlugin.awaitWebTunnelReady(WEBTUNNEL_RECOVERY_TIMEOUT_MS)) {
+                    TorPlugin.refreshOnionRoute(url.getHost());
+                    Thread.sleep(2_000L);
+                }
             }
         }
         throw new IllegalStateException("Onion service unreachable after " + MAX_ATTEMPTS + " Tor attempts: " +

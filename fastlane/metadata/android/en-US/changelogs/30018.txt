@@ -1,0 +1,3 @@
+Fixed the QR scanner crash without using Google scanner components.
+Fixed onion login timeouts even when bundled Tor reported ready.
+Automatically fetches a current WebTunnel bridge, restarts Tor, and retries after routing failures.

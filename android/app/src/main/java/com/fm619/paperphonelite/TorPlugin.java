@@ -53,11 +53,12 @@ public class TorPlugin extends Plugin {
             "https://bridges.torproject.org/moat/circumvention/settings";
     private static final String WEBTUNNEL_CACHE_KEY = "webtunnel_bridge";
     private static volatile TorService activeTorService;
+    private static volatile TorPlugin activePlugin;
 
-    private String status = TorService.STATUS_OFF;
+    private volatile String status = TorService.STATUS_OFF;
     private boolean proxyReady;
-    private boolean usingWebTunnel;
-    private boolean fallbackInProgress;
+    private volatile boolean usingWebTunnel;
+    private volatile boolean fallbackInProgress;
     private boolean receiverRegistered;
     private boolean serviceBound;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -120,6 +121,7 @@ public class TorPlugin extends Plugin {
     @Override
     public void load() {
         super.load();
+        activePlugin = this;
         registerStatusReceiver();
     }
 
@@ -184,6 +186,13 @@ public class TorPlugin extends Plugin {
                 if (bridge == null) bridge = loadCachedWebTunnelBridge();
                 if (bridge == null) throw new IllegalStateException("No WebTunnel bridge is available");
 
+                if (usingWebTunnel && transportController != null) {
+                    try {
+                        transportController.stop(IPtProxy.Webtunnel);
+                    } catch (Exception error) {
+                        Log.w(TAG, "Unable to stop stale WebTunnel transport", error);
+                    }
+                }
                 long transportPort = startWebTunnelTransport();
                 writeWebTunnelTorrc(bridge, transportPort);
 
@@ -334,6 +343,34 @@ public class TorPlugin extends Plugin {
         }
     }
 
+    /**
+     * Switch to a freshly obtained WebTunnel bridge after Tor itself is up but
+     * onion streams cannot be routed. Concurrent callers share one recovery.
+     */
+    static synchronized boolean requestWebTunnelRecovery() {
+        TorPlugin plugin = activePlugin;
+        if (plugin == null) return false;
+        if (plugin.fallbackInProgress) return true;
+        plugin.fallbackInProgress = true;
+        plugin.mainHandler.post(plugin::startWebTunnelFallback);
+        return true;
+    }
+
+    /** Wait from a background plugin thread until the replacement SOCKS route is ready. */
+    static boolean awaitWebTunnelReady(long timeoutMs) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            TorPlugin plugin = activePlugin;
+            int socksPort = TorService.socksPort;
+            if (plugin != null && plugin.usingWebTunnel &&
+                    TorService.STATUS_ON.equals(plugin.status) && socksPort > 0 && socksPort <= 65535) {
+                return true;
+            }
+            Thread.sleep(500);
+        }
+        return false;
+    }
+
     private void applyTorProxy() {
         int socksPort = TorService.socksPort;
         if (socksPort < 1 || socksPort > 65535) {
@@ -400,6 +437,7 @@ public class TorPlugin extends Plugin {
             serviceBound = false;
         }
         activeTorService = null;
+        if (activePlugin == this) activePlugin = null;
         mainHandler.removeCallbacks(directConnectTimeout);
         mainHandler.removeCallbacks(webTunnelConnectTimeout);
         backgroundExecutor.shutdownNow();
