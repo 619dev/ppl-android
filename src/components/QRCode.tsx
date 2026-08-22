@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
 import jsQR from 'jsqr'
 
@@ -71,9 +71,11 @@ export function QRCodeModal({
 export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [error, setError] = useState('')
   const [isStarting, setIsStarting] = useState(false)
+  const [fallbackMode, setFallbackMode] = useState(false)
 
   const stopCamera = () => {
     try {
@@ -93,8 +95,74 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
     onClose()
   }
 
+  const decodeImageData = (img: CanvasImageSource, width: number, height: number) => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+
+    const maxSide = 420
+    const ratio = Math.min(1, maxSide / Math.max(width, height))
+    const decodeWidth = Math.max(1, Math.floor(width * ratio))
+    const decodeHeight = Math.max(1, Math.floor(height * ratio))
+
+    canvas.width = decodeWidth
+    canvas.height = decodeHeight
+
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) return null
+
+    context.drawImage(img, 0, 0, decodeWidth, decodeHeight)
+    const pixels = context.getImageData(0, 0, decodeWidth, decodeHeight)
+    const result = jsQR(pixels.data, decodeWidth, decodeHeight, { inversionAttempts: 'dontInvert' })
+    return result?.data ?? null
+  }
+
+  const finalizeScan = (value: string, activeRef: { value: boolean }) => {
+    if (!activeRef.value) return
+    activeRef.value = false
+    stopCamera()
+    Promise.resolve().then(() => onScan(value)).catch(() => {})
+  }
+
+  const scanFromFile = async (file: File) => {
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result || ''))
+        reader.onerror = () => reject(reader.error)
+        reader.readAsDataURL(file)
+      })
+
+      const img = new Image()
+      const value = await new Promise<string | null>((resolve, reject) => {
+        img.onload = () => {
+          const result = decodeImageData(img, img.naturalWidth, img.naturalHeight)
+          resolve(result)
+        }
+        img.onerror = () => reject(new Error('Cannot read image'))
+        img.src = dataUrl
+      })
+
+      return value
+    } catch {
+      return null
+    }
+  }
+
+  const onPickFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const activeRef = { value: true }
+    setIsStarting(false)
+    const value = await scanFromFile(file)
+    if (value) {
+      finalizeScan(value, activeRef)
+    } else {
+      setError('No QR code found in image')
+    }
+  }
+
   useEffect(() => {
-    let active = true
+    let active = { value: true }
     let animFrame = 0
     const canUseMediaDevices =
       typeof navigator !== 'undefined' &&
@@ -107,9 +175,10 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       }
 
       const candidates = [
-        { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 }, }, audio: false },
-        { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 }, }, audio: false },
+        { video: { facingMode: 'environment' }, audio: false },
+        { video: { facingMode: 'environment', width: 640, height: 480 }, audio: false },
         { video: true, audio: false },
+        { video: { width: 320, height: 240 }, audio: false },
       ] as const
 
       let lastErr: unknown
@@ -145,37 +214,16 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       }
     }
 
-    const decodeWithCanvas = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
-      try {
-        const width = video.videoWidth
-        const height = video.videoHeight
-        if (!width || !height || video.readyState < 2) return null
-
-        canvas.width = width
-        canvas.height = height
-
-        const context = canvas.getContext('2d', { willReadFrequently: true })
-        if (!context) return null
-
-        context.drawImage(video, 0, 0, width, height)
-        const pixels = context.getImageData(0, 0, width, height)
-        const result = jsQR(pixels.data, width, height, { inversionAttempts: 'dontInvert' })
-        return result?.data ?? null
-      } catch {
-        return null
-      }
-    }
-
     const start = async () => {
       setIsStarting(true)
       try {
         const stream = await acquireStream()
 
         // The scanner may have been closed while the permission prompt was open.
-        if (!active) {
-          stream.getTracks().forEach(track => track.stop())
-          return
-        }
+      if (!active.value) {
+        stream.getTracks().forEach(track => track.stop())
+        return
+      }
 
         streamRef.current = stream
         if (!videoRef.current) {
@@ -191,36 +239,50 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
           setError('Please tap again to allow camera permission and playback')
         }
 
-        const detector = createDetector()
-        const finalizeScan = (value: string) => {
-          active = false
-          stopCamera()
-          Promise.resolve().then(() => onScan(value)).catch(() => {})
-        }
+      const detector = createDetector()
+        let lastFrameAt = 0
 
         const scan = async () => {
           try {
-            if (!active || !videoRef.current || !canvasRef.current) {
-              if (active) animFrame = requestAnimationFrame(scan)
+            if (!active.value || !videoRef.current) {
               return
             }
 
-            const detected = await decodeWithDetector(detector, videoRef.current)
+            const now = performance.now()
+            if (now - lastFrameAt < 140) {
+              if (active.value) {
+                animFrame = requestAnimationFrame(scan)
+              }
+              return
+            }
+            lastFrameAt = now
+
+            const video = videoRef.current
+            const width = video.videoWidth
+            const height = video.videoHeight
+            if (!width || !height || video.readyState < 2) {
+              if (active.value) {
+                animFrame = requestAnimationFrame(scan)
+              }
+              return
+            }
+
+            const detected = await decodeWithDetector(detector, video)
             if (detected) {
-              finalizeScan(detected)
+              finalizeScan(detected, active)
               return
             }
 
-            const result = decodeWithCanvas(videoRef.current, canvasRef.current)
+            const result = decodeImageData(video, width, height)
             if (result) {
-              finalizeScan(result)
+              finalizeScan(result, active)
               return
             }
           } catch {
             // keep scanning on transient frame errors
           }
 
-          if (active) {
+          if (active.value) {
             animFrame = requestAnimationFrame(scan)
           }
         }
@@ -228,6 +290,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
         scan()
       } catch (err: any) {
         setError(err?.message || 'Cannot access camera')
+        setFallbackMode(true)
       } finally {
         setIsStarting(false)
       }
@@ -236,7 +299,7 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
     start()
 
     return () => {
-      active = false
+      active.value = false
       cancelAnimationFrame(animFrame)
       stopCamera()
     }
@@ -266,6 +329,14 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
           width: '100%', height: '100%', objectFit: 'cover',
         }} playsInline muted />
         <canvas ref={canvasRef} style={{ display: 'none' }} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={onPickFile}
+        />
 
         {/* Scan frame overlay */}
         <div style={{
@@ -295,6 +366,17 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
               <div style={{ fontSize: 48, marginBottom: 12 }}>📷</div>
               <div>{error}</div>
               {isStarting ? <div style={{ marginTop: 8, opacity: 0.9 }}>Loading camera…</div> : null}
+              {fallbackMode && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{ padding: '8px 12px', borderRadius: 12, border: 'none', fontWeight: 600 }}
+                  >
+                    Choose photo / Take photo
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
