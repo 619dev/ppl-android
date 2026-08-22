@@ -151,34 +151,36 @@ public class TorHttpPlugin extends Plugin {
     }
 
     private static NativeResponse readHttpResponse(InputStream input) throws Exception {
-        byte[] response = readAll(input);
-        int headerEnd = findHeaderEnd(response);
-        if (headerEnd < 0) throw new EOFException("Invalid HTTP response from onion service");
-        String[] lines = new String(response, 0, headerEnd, StandardCharsets.ISO_8859_1).split("\\r\\n");
-        String[] statusParts = lines[0].split(" ", 3);
+        String statusLine = readAsciiLine(input);
+        String[] statusParts = statusLine.split(" ", 3);
         if (statusParts.length < 2) throw new IllegalStateException("Invalid HTTP status line");
         int status = Integer.parseInt(statusParts[1]);
         Map<String, String> headers = new LinkedHashMap<>();
-        for (int i = 1; i < lines.length; i++) {
-            int colon = lines[i].indexOf(':');
-            if (colon > 0) headers.put(lines[i].substring(0, colon).trim().toLowerCase(), lines[i].substring(colon + 1).trim());
+        while (true) {
+            String line = readAsciiLine(input);
+            if (line.isEmpty()) break;
+            int colon = line.indexOf(':');
+            if (colon > 0) headers.put(line.substring(0, colon).trim().toLowerCase(), line.substring(colon + 1).trim());
         }
-        byte[] payload = new byte[response.length - headerEnd - 4];
-        System.arraycopy(response, headerEnd + 4, payload, 0, payload.length);
-        if ("chunked".equalsIgnoreCase(headers.get("transfer-encoding"))) payload = decodeChunked(payload);
+
+        byte[] payload;
+        if ("chunked".equalsIgnoreCase(headers.get("transfer-encoding"))) {
+            payload = decodeChunked(input);
+        } else if (headers.containsKey("content-length")) {
+            int contentLength = Integer.parseInt(headers.get("content-length"));
+            if (contentLength < 0 || contentLength > 32 * 1024 * 1024) throw new IllegalStateException("Invalid HTTP content length");
+            payload = new byte[contentLength];
+            new DataInputStream(input).readFully(payload);
+        } else if (status == 204 || status == 304 || (status >= 100 && status < 200)) {
+            payload = new byte[0];
+        } else {
+            payload = readAll(input);
+        }
         if ("gzip".equalsIgnoreCase(headers.get("content-encoding"))) payload = readAll(new GZIPInputStream(new ByteArrayInputStream(payload)));
         return new NativeResponse(status, new String(payload, StandardCharsets.UTF_8), headers);
     }
 
-    private static int findHeaderEnd(byte[] data) {
-        for (int i = 0; i <= data.length - 4; i++) {
-            if (data[i] == 13 && data[i + 1] == 10 && data[i + 2] == 13 && data[i + 3] == 10) return i;
-        }
-        return -1;
-    }
-
-    private static byte[] decodeChunked(byte[] data) throws Exception {
-        ByteArrayInputStream input = new ByteArrayInputStream(data);
+    private static byte[] decodeChunked(InputStream input) throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         while (true) {
             String line = readAsciiLine(input);
