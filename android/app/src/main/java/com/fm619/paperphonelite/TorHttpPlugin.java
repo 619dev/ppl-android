@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -82,9 +83,10 @@ public class TorHttpPlugin extends Plugin {
         if (hostBytes.length > 255) throw new IllegalArgumentException("Onion hostname is too long");
 
         Socket socket = new Socket();
+        String timeoutStage = "local Tor SOCKS listener";
         try {
             socket.connect(new InetSocketAddress("127.0.0.1", socksPort), 5_000);
-            socket.setSoTimeout(60_000);
+            socket.setSoTimeout(120_000);
             DataInputStream input = new DataInputStream(socket.getInputStream());
             OutputStream output = socket.getOutputStream();
 
@@ -102,6 +104,7 @@ public class TorHttpPlugin extends Plugin {
             output.write(connect.toByteArray());
             output.flush();
 
+            timeoutStage = "Tor onion connection";
             int version = input.readUnsignedByte();
             int reply = input.readUnsignedByte();
             input.readUnsignedByte();
@@ -111,7 +114,7 @@ public class TorHttpPlugin extends Plugin {
 
             if ("https".equals(url.getProtocol())) {
                 socket = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(socket, host, targetPort, true);
-                socket.setSoTimeout(60_000);
+                socket.setSoTimeout(120_000);
                 input = new DataInputStream(socket.getInputStream());
                 output = socket.getOutputStream();
             }
@@ -134,7 +137,10 @@ public class TorHttpPlugin extends Plugin {
             output.write(request.toString().getBytes(StandardCharsets.ISO_8859_1));
             if (bodyBytes.length > 0) output.write(bodyBytes);
             output.flush();
+            timeoutStage = "onion HTTP response";
             return readHttpResponse(input);
+        } catch (SocketTimeoutException error) {
+            throw new SocketTimeoutException(timeoutStage + " timed out");
         } finally {
             try { socket.close(); } catch (Exception ignored) {}
         }
