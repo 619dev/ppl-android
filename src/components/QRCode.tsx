@@ -193,37 +193,16 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
       throw lastErr ?? new Error('Unable to access camera')
     }
 
-    const createDetector = () => {
-      try {
-        const CandidateDetector = (window as any).BarcodeDetector
-        if (typeof CandidateDetector !== 'function') return null
-        return new CandidateDetector({ formats: ['qr_code'] })
-      } catch {
-        return null
-      }
-    }
-
-    const decodeWithDetector = async (detector: any | null, video: HTMLVideoElement) => {
-      if (!detector) return null
-      try {
-        const barcodes = await detector.detect(video)
-        const qrValue = barcodes?.find((bc: any) => Boolean(bc?.rawValue))?.rawValue
-        return qrValue ?? null
-      } catch {
-        return null
-      }
-    }
-
     const start = async () => {
       setIsStarting(true)
       try {
         const stream = await acquireStream()
 
         // The scanner may have been closed while the permission prompt was open.
-      if (!active.value) {
-        stream.getTracks().forEach(track => track.stop())
-        return
-      }
+        if (!active.value) {
+          stream.getTracks().forEach(track => track.stop())
+          return
+        }
 
         streamRef.current = stream
         if (!videoRef.current) {
@@ -239,7 +218,6 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
           setError('Please tap again to allow camera permission and playback')
         }
 
-      const detector = createDetector()
         let lastFrameAt = 0
 
         const scan = async () => {
@@ -267,12 +245,9 @@ export function QRScanner({ onScan, onClose }: { onScan: (data: string) => void;
               return
             }
 
-            const detected = await decodeWithDetector(detector, video)
-            if (detected) {
-              finalizeScan(detected, active)
-              return
-            }
-
+            // Do not use WebView's BarcodeDetector here. On Android it may bind
+            // to Google Play Services and throw a native, uncatchable exception
+            // on GMS-free devices. jsQR runs fully locally and is F-Droid-safe.
             const result = decodeImageData(video, width, height)
             if (result) {
               finalizeScan(result, active)
