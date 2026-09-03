@@ -50,7 +50,21 @@ them from this exact release without private server addresses, real account
 names, private message content, QR codes, or notification topics. Clearly
 fictional demo identities and content are acceptable.
 
-## 4. Choose the submission route
+## 4. Current submission status
+
+The initial submission is already open. Update these existing items rather than
+creating duplicates:
+
+- RFP: `fdroid/rfp#4291`
+- fdroiddata merge request: `fdroid/fdroiddata!46295`
+
+The merge-request branch must contain only the latest PaperPhoneLite build
+entry. The current candidate is `3.0.20` (`versionCode 30020`) at immutable
+source commit `a28748330c833358a8fc9f5f30c53784e12a20db`. Its signed GitHub build has
+passed installation and runtime testing; F-Droid will independently reproduce
+and sign the unsigned build.
+
+## 5. Submission routes
 
 F-Droid currently provides two routes for a new app:
 
@@ -69,29 +83,24 @@ request will follow: it runs the issuebot checks and leaves a public record of
 the initial review. Link the RFP from the later merge request and close it when
 the app is accepted.
 
-## 5. Open the RFP
+## 6. Update the RFP
 
-1. Confirm that PaperPhoneLite is not already present in `fdroiddata` and that
-   no open or closed RFP already exists for application ID
-   `com.fm619.paperphonelite`.
-2. Open a new issue at `https://gitlab.com/fdroid/rfp/-/issues/new`, select the
-   `Default` description template, and paste/update `fdroid/RFP.md`.
-3. Check only statements that are currently true. In particular, do not check
-   the Fastlane-assets item until the required screenshots have been added.
-4. Submit the issue and wait for issuebot's report. Address any reported
-   licensing, dependency, tracker, build, or metadata problems before opening
-   the direct merge request.
+1. Update `fdroid/rfp#4291`; do not open a duplicate RFP.
+2. Keep its application ID and repository information aligned with
+   `fdroid/RFP.md`.
+3. Link the current fdroiddata merge request and source release, and notify the
+   maintainers when a tested replacement build is pushed.
+4. Address any reported licensing, dependency, tracker, build, or metadata
+   problems in the existing merge request.
 
-## 6. Submit to fdroiddata
+## 7. Update fdroiddata
 
-1. Create a GitLab account, fork `https://gitlab.com/fdroid/fdroiddata`, and
-   clone your fork.
-2. Create a branch named `com.fm619.paperphonelite` from current `master`.
+1. Use the existing fork and branch `619dev/fdroiddata:com.fm619.paperphonelite`.
+2. Rebase it on current `fdroid/fdroiddata:master` when required by maintainers.
 3. Copy `fdroid/com.fm619.paperphonelite.yml` to
    `metadata/com.fm619.paperphonelite.yml` in that clone.
-4. Verify that the public `v3.0.20` tag exists and resolves to the intended
-   source. Replace `commit: v3.0.20` with the immutable full commit hash if the
-   F-Droid reviewer requests it.
+4. Verify that public tag `v3.0.20` resolves to immutable commit
+   `a28748330c833358a8fc9f5f30c53784e12a20db`.
 5. Run the official checks in the F-Droid buildserver container:
 
 ```sh
@@ -105,11 +114,10 @@ fdroid build com.fm619.paperphonelite
 6. Fix every error. Review any scanner exception: the included `scanignore`
    is limited to Capacitor's source template archive and must not be broadened
    merely to silence findings.
-7. Commit only the metadata file with message `New App: PaperPhoneLite`, push
-   the branch, and open a merge request against `fdroid/fdroiddata:master`.
-   Complete its new-app checklist and monitor both CI and reviewer comments.
+7. Commit only the metadata file, push the existing branch, and update
+   `fdroid/fdroiddata!46295`. Monitor its CI and reviewer comments.
 
-## 7. Future releases
+## 8. Future releases
 
 For every release, update `package.json`, `android/app/build.gradle`, visible
 in-app version text, and changelog together. Increase `versionCode`, commit,

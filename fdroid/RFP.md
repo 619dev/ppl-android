@@ -1,7 +1,7 @@
-* [ ] The app complies with the [inclusion criteria](https://f-droid.org/docs/Inclusion_Policy/?title=Inclusion_Policy).
-* [ ] The app is not already [listed](https://gitlab.com/search?scope=issues&group_id=28397) in the repo or issue tracker.
-* [ ] The app has not already [been requested](https://gitlab.com/search?scope=issues&project_id=2167965).
-* [ ] The upstream app source code repo contains the app metadata _(summary/description/images/changelog/etc)_ in a [Fastlane](https://gitlab.com/snippets/1895688) or [Triple-T](https://gitlab.com/snippets/1901490) folder structure.
+* [x] The app complies with the [inclusion criteria](https://f-droid.org/docs/Inclusion_Policy/?title=Inclusion_Policy).
+* [x] The app is not already [listed](https://gitlab.com/search?scope=issues&group_id=28397) in the repo or issue tracker.
+* [x] The app has not already [been requested](https://gitlab.com/search?scope=issues&project_id=2167965).
+* [x] The upstream app source code repo contains the app metadata _(summary/description/images/changelog/etc)_ in a [Fastlane](https://gitlab.com/snippets/1895688) or [Triple-T](https://gitlab.com/snippets/1901490) folder structure.
 * [x] The original app author has been notified, and does not oppose the inclusion.
 * [ ] Optionally [donated](https://f-droid.org/donate/) to support the maintenance of this app in F-Droid.
 
@@ -32,6 +32,14 @@ AutoName: PaperPhoneLite
 RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 ```
+
+Current release: `3.0.20` (`versionCode 30020`)
+
+Source commit: `a28748330c833358a8fc9f5f30c53784e12a20db`
+
+Release: https://github.com/619dev/ppl-android/releases/tag/v3.0.20
+
+fdroiddata MR: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295
 
 Why do you want this app added to F-Droid:
 

@@ -14,7 +14,7 @@ Repo: https://github.com/619dev/ppl-android.git
 Builds:
   - versionName: 3.0.20
     versionCode: 30020
-    commit: v3.0.20
+    commit: a28748330c833358a8fc9f5f30c53784e12a20db
     subdir: android/app
     sudo:
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list

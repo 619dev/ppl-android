@@ -8,10 +8,12 @@ This file records Android releases of `ppl-android` based on [619dev/PaperPhoneL
 
 - 修复 3.0.19 Release APK 启动后闪退的问题：暂停 R8 代码压缩与 Android 资源裁剪，避免反射和 JNI 依赖在运行时被错误裁剪。
 - 继续仅打包 `arm64-v8a` 原生库，以保留 ABI 精简带来的体积收益。
+- 签名版 APK 已完成实际安装和运行测试，并同步更新 F-Droid RFP 与 fdroiddata MR 提交材料。
 - npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.20`（`versionCode 30020`）。
 
 - Fixed the startup crash in the 3.0.19 release APK by disabling R8 code minification and Android resource shrinking, preventing reflection/JNI dependencies from being removed at runtime.
 - Continued packaging only `arm64-v8a` native libraries to retain the ABI-related size reduction.
+- Confirmed the signed APK through installation and runtime testing, and updated the F-Droid RFP and fdroiddata MR submission materials.
 - Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.20` (`versionCode 30020`).
 
 ## 3.0.19 — 2026-09-03

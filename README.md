@@ -79,7 +79,7 @@ cd android
 ./gradlew clean assembleRelease
 ```
 
-有签名环境变量时，Release APK 位于 `android/app/build/outputs/apk/release/app-release.apk`；未提供签名信息时会生成 `app-release-unsigned.apk`。Release 仅支持 `arm64-v8a`；3.0.20 暂停 R8 与资源裁剪以修复启动闪退。正式 Android APK 发布到本仓库的 [GitHub Releases](https://github.com/619dev/ppl-android/releases)，并计划提交至 F-Droid；不发布到 Google Play。F-Droid 会使用自己的密钥签名，因此其 APK 与 GitHub Release APK 不能互相覆盖安装。
+有签名环境变量时，Release APK 位于 `android/app/build/outputs/apk/release/app-release.apk`；未提供签名信息时会生成 `app-release-unsigned.apk`。Release 仅支持 `arm64-v8a`；3.0.20 暂停 R8 与资源裁剪以修复启动闪退，签名版已完成实际安装与运行测试。正式 Android APK 发布在本仓库的 [GitHub Releases](https://github.com/619dev/ppl-android/releases)。F-Droid 收录正在通过 [RFP #4291](https://gitlab.com/fdroid/rfp/-/work_items/4291) 和 [fdroiddata MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) 推进；不发布到 Google Play。F-Droid 会使用自己的密钥签名，因此其 APK 与 GitHub Release APK 不能互相覆盖安装。
 
 F-Droid 提交与验证流程见 [`fdroid/README.md`](fdroid/README.md)，候选构建元数据见 [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml)。
 

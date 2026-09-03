@@ -79,7 +79,7 @@ cd android
 ./gradlew clean assembleRelease
 ```
 
-With signing environment variables, the release APK is written to `android/app/build/outputs/apk/release/app-release.apk`; without signing credentials, Gradle produces `app-release-unsigned.apk`. Releases support `arm64-v8a` only; version 3.0.20 disables R8 and resource shrinking to fix the startup crash. Official Android APKs are distributed through this repository's [GitHub Releases](https://github.com/619dev/ppl-android/releases), with an F-Droid submission planned; the app is not published on Google Play. F-Droid signs its build with a separate key, so F-Droid and GitHub Release APKs cannot upgrade each other in place.
+With signing environment variables, the release APK is written to `android/app/build/outputs/apk/release/app-release.apk`; without signing credentials, Gradle produces `app-release-unsigned.apk`. Releases support `arm64-v8a` only; version 3.0.20 disables R8 and resource shrinking to fix the startup crash, and the signed build has passed installation and runtime testing. Official Android APKs are distributed through this repository's [GitHub Releases](https://github.com/619dev/ppl-android/releases). F-Droid inclusion is in progress through [RFP #4291](https://gitlab.com/fdroid/rfp/-/work_items/4291) and [fdroiddata MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295); the app is not published on Google Play. F-Droid signs its build with a separate key, so F-Droid and GitHub Release APKs cannot upgrade each other in place.
 
 See [`fdroid/README.md`](fdroid/README.md) for the submission and verification procedure and [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml) for the candidate build metadata.
 
