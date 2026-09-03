@@ -11,7 +11,7 @@
 
 ```yaml
 Categories:
-  - Internet
+  - Messaging
 
 License: AGPL-3.0-only
 
