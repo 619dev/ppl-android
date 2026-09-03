@@ -1,0 +1,3 @@
+Fixed the startup crash in the 3.0.19 release APK.
+Disabled R8 code minification and Android resource shrinking to preserve reflection/JNI dependencies.
+Continued support for arm64-v8a devices only.

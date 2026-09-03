@@ -5,7 +5,7 @@
 > [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite) 的 Android 客户端，使用 Capacitor 8 打包上游 React/TypeScript 前端，并内嵌 Tor。
 
 [![Upstream](https://img.shields.io/badge/上游-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/版本-3.0.19-orange)](package.json)
+[![Version](https://img.shields.io/badge/版本-3.0.20-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## 项目范围
@@ -26,7 +26,7 @@ PaperPhoneLite 3.x **不提供**朋友圈、公开时间线、单聊或群聊语
 
 ## Tor 与网络边界
 
-- Release APK 内嵌 Guardian Project `tor-android 0.4.8.17.2`，仅面向 64 位 ARM 设备（`arm64-v8a`）；同时启用 R8 代码压缩和 Android 资源裁剪以控制安装包体积。Debug 构建仍可用于本地开发测试。
+- Release APK 内嵌 Guardian Project `tor-android 0.4.8.17.2`，仅面向 64 位 ARM 设备（`arm64-v8a`）。为避免反射/JNI 依赖在运行时闪退，3.0.20 暂停 R8 代码压缩与 Android 资源裁剪。Debug 构建仍可用于本地开发测试。
 - 原生 Tor 服务监听本机 SOCKS5 `127.0.0.1:9050`；只有 Tor 引导进度达到 100% 后，Android WebView 代理才切换到该端口，避免线路尚未可用时误报成功并发送登录请求。
 - 直接 Tor 连接 20 秒内无法建立线路时，客户端会从 Tor Project 官方 circumvention settings 接口获取当前 WebTunnel bridge，通过内嵌 IPtProxy/Lyrebird 重启 Tor；bridge 会规范化为 `utls=none`，上次成功获取的 bridge 可在接口暂时不可用时回退使用。
 - WebTunnel 重启前会清理可安全重建的 Tor 目录共识缓存，避免过期共识使引导长期停滞；不会清除账号、消息或密钥数据。
@@ -41,7 +41,7 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 ## 本地数据与密钥
 
 - 上游前端通过 IndexedDB 保存身份密钥和 Sender Key，通过 localStorage 保存会话、设置、消息缓存与离线数据。
-- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.19 前端没有把整个聊天缓存交给 Android Keystore 加密。
+- 消息缓存持久化前会移除已解密的明文字段，但当前 3.0.20 前端没有把整个聊天缓存交给 Android Keystore 加密。
 - 启用“文本外观加密”后，应用启动会要求输入额外密码；错误或取消解锁时只显示文本外观密文。该功能不会替代设备锁或 Android Keystore。
 - 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.0 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
 - 清理应用数据或卸载应用可能永久删除本地密钥及无法恢复的历史消息。
@@ -52,8 +52,8 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 |---|---|
 | 应用名称 | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| 版本 | `3.0.19` |
-| Version Code | `30019` |
+| 版本 | `3.0.20` |
+| Version Code | `30020` |
 | 最低 Android API | 24 |
 
 ## 构建
@@ -79,7 +79,7 @@ cd android
 ./gradlew clean assembleRelease
 ```
 
-有签名环境变量时，Release APK 位于 `android/app/build/outputs/apk/release/app-release.apk`；未提供签名信息时会生成 `app-release-unsigned.apk`。Release 仅支持 `arm64-v8a`，并启用 R8 与资源裁剪。正式 Android APK 发布到本仓库的 [GitHub Releases](https://github.com/619dev/ppl-android/releases)，并计划提交至 F-Droid；不发布到 Google Play。F-Droid 会使用自己的密钥签名，因此其 APK 与 GitHub Release APK 不能互相覆盖安装。
+有签名环境变量时，Release APK 位于 `android/app/build/outputs/apk/release/app-release.apk`；未提供签名信息时会生成 `app-release-unsigned.apk`。Release 仅支持 `arm64-v8a`；3.0.20 暂停 R8 与资源裁剪以修复启动闪退。正式 Android APK 发布到本仓库的 [GitHub Releases](https://github.com/619dev/ppl-android/releases)，并计划提交至 F-Droid；不发布到 Google Play。F-Droid 会使用自己的密钥签名，因此其 APK 与 GitHub Release APK 不能互相覆盖安装。
 
 F-Droid 提交与验证流程见 [`fdroid/README.md`](fdroid/README.md)，候选构建元数据见 [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml)。
 

@@ -17,8 +17,8 @@ This directory is staging material. The final metadata file belongs in the
 4. Confirm that generated directories and secrets are absent with
    `git status --ignored` and GitHub's web UI. Never commit `node_modules`,
    `dist`, Android build output, `local.properties`, or a keystore.
-5. Tag the exact reviewed commit: `git tag -s v3.0.19 -m "PaperPhoneLite 3.0.19"`
-   and then push that tag. If `v3.0.19` already exists, do not move it: release a
+5. Tag the exact reviewed commit: `git tag -s v3.0.20 -m "PaperPhoneLite 3.0.20"`
+   and then push that tag. If `v3.0.20` already exists, do not move it: release a
    new version/code and tag instead.
 
 ## 2. Verify the source build
@@ -37,7 +37,8 @@ With no keystore/password variables, the expected result is
 `android/app/build/outputs/apk/release/app-release-unsigned.apk`. Inspect it
 with `apkanalyzer manifest print ...` and test a separately signed copy on an
 arm64-v8a emulator or device. The release intentionally contains only
-`arm64-v8a` native libraries and enables R8 plus resource shrinking. Also run
+`arm64-v8a` native libraries; R8 and resource shrinking are disabled because
+the 3.0.19 configuration caused a runtime startup crash. Also run
 `./gradlew lintRelease`.
 
 ## 3. Add store listing assets
@@ -88,8 +89,8 @@ the app is accepted.
 2. Create a branch named `com.fm619.paperphonelite` from current `master`.
 3. Copy `fdroid/com.fm619.paperphonelite.yml` to
    `metadata/com.fm619.paperphonelite.yml` in that clone.
-4. Verify that the public `v3.0.19` tag exists and resolves to the intended
-   source. Replace `commit: v3.0.19` with the immutable full commit hash if the
+4. Verify that the public `v3.0.20` tag exists and resolves to the intended
+   source. Replace `commit: v3.0.20` with the immutable full commit hash if the
    F-Droid reviewer requests it.
 5. Run the official checks in the F-Droid buildserver container:
 
