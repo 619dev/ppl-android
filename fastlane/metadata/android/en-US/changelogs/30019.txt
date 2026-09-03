@@ -1,0 +1,3 @@
+Reduced the release APK from 133.66 MiB to 36.80 MiB by targeting arm64-v8a only.
+Enabled R8 code minification and Android resource shrinking.
+Updated build and release documentation with ABI and signing details.

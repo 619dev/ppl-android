@@ -5,7 +5,7 @@
 > Android client for [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite), packaging the upstream React/TypeScript frontend with Capacitor 8 and a bundled Tor client.
 
 [![Upstream](https://img.shields.io/badge/Upstream-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/Version-3.0.18-orange)](package.json)
+[![Version](https://img.shields.io/badge/Version-3.0.19-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## Scope
@@ -26,7 +26,7 @@ PaperPhoneLite 3.x does **not** provide Moments, a public Timeline, direct or gr
 
 ## Tor and Network Boundary
 
-- The APK bundles Guardian Project `tor-android 0.4.8.17.2` for `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64`.
+- Release APKs bundle Guardian Project `tor-android 0.4.8.17.2` for 64-bit ARM devices only (`arm64-v8a`) and enable R8 code minification plus Android resource shrinking to control package size. Debug builds remain available for local development testing.
 - The native Tor service exposes SOCKS5 on `127.0.0.1:9050`; the Android WebView proxy switches to it only after Tor reaches 100% bootstrap, preventing login requests while the circuit is not yet usable.
 - If direct Tor cannot establish a circuit within 20 seconds, the client fetches a current WebTunnel bridge from Tor Project's official circumvention-settings endpoint and restarts Tor through bundled IPtProxy/Lyrebird. Bridges are normalized with `utls=none`, and the last successfully fetched bridge is retained as a temporary fallback.
 - Before a WebTunnel restart, the client removes only rebuildable Tor directory-consensus caches so stale consensus data cannot leave bootstrap stalled; account, message, and key data are not cleared.
@@ -41,7 +41,7 @@ ntfy is the only supported, optional Android background-notification path. When 
 ## Local Data and Keys
 
 - The upstream frontend stores identity keys and Sender Keys in IndexedDB, while sessions, settings, message caches, and offline data use localStorage.
-- Decrypted message fields are removed before message-cache persistence, but the current 3.0.18 frontend does not encrypt the entire chat cache with Android Keystore.
+- Decrypted message fields are removed before message-cache persistence, but the current 3.0.19 frontend does not encrypt the entire chat cache with Android Keystore.
 - When text-appearance encryption is enabled, startup asks for the extra password; cancelling or entering an incorrect password leaves only the styled ciphertext visible. This does not replace a device lock or Android Keystore.
 - Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.0 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
 - Clearing app data or uninstalling the app can permanently remove local keys and unrecoverable history.
@@ -52,8 +52,8 @@ ntfy is the only supported, optional Android background-notification path. When 
 |---|---|
 | App name | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| Version | `3.0.18` |
-| Version code | `30018` |
+| Version | `3.0.19` |
+| Version code | `30019` |
 | Minimum Android API | 24 |
 
 ## Build
@@ -79,7 +79,7 @@ cd android
 ./gradlew clean assembleRelease
 ```
 
-The release APK is written to `android/app/build/outputs/apk/release/app-release.apk`. Official Android APKs are distributed through this repository's [GitHub Releases](https://github.com/619dev/ppl-android/releases), with an F-Droid submission planned; the app is not published on Google Play. F-Droid signs its build with a separate key, so F-Droid and GitHub Release APKs cannot upgrade each other in place.
+With signing environment variables, the release APK is written to `android/app/build/outputs/apk/release/app-release.apk`; without signing credentials, Gradle produces `app-release-unsigned.apk`. Releases support `arm64-v8a` only and use R8 plus resource shrinking. Official Android APKs are distributed through this repository's [GitHub Releases](https://github.com/619dev/ppl-android/releases), with an F-Droid submission planned; the app is not published on Google Play. F-Droid signs its build with a separate key, so F-Droid and GitHub Release APKs cannot upgrade each other in place.
 
 See [`fdroid/README.md`](fdroid/README.md) for the submission and verification procedure and [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml) for the candidate build metadata.
 

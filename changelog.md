@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.19 — 2026-09-03
+
+- Release APK 改为仅包含 `arm64-v8a` 原生库，不再打包 `armeabi-v7a`、`x86` 和 `x86_64`。
+- 启用 R8 代码压缩与 Android 资源裁剪；未签名 Release APK 从 133.66 MiB 降至 36.80 MiB，减少 72.5%。
+- 更新中英文构建、发布和 F-Droid 说明，明确 ABI 支持范围、签名产物名称及验证步骤。
+- npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.19`（`versionCode 30019`）。
+
+- Limited release APKs to `arm64-v8a`, removing packaged `armeabi-v7a`, `x86`, and `x86_64` native libraries.
+- Enabled R8 code minification and Android resource shrinking; the unsigned release APK decreased from 133.66 MiB to 36.80 MiB, a 72.5% reduction.
+- Updated the English and Chinese build, release, and F-Droid documentation with the supported ABI, signed/unsigned output names, and verification steps.
+- Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.19` (`versionCode 30019`).
+
 ## 3.0.18 — 2026-08-22
 
 - 修复“扫一扫”启动即崩溃，增强 WebView 扫码路径容错与生命周期清理，避免 Android 首次打开扫描页时报错退出。
