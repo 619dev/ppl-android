@@ -33,11 +33,11 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 ```
 
-Current release: `3.0.20` (`versionCode 30020`)
+Current release: `3.0.21` (`versionCode 30021`)
 
 Source commit: `a28748330c833358a8fc9f5f30c53784e12a20db`
 
-Release: https://github.com/619dev/ppl-android/releases/tag/v3.0.20
+Release: https://github.com/619dev/ppl-android/releases/tag/v3.0.21
 
 fdroiddata MR: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295
 

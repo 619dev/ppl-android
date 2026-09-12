@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.21 — 2026-09-12
+
+- 同步上游 Web 前端的头像存储更新：用户头像与群头像上传改用永久存储，避免临时文件清理后头像失效。
+- 统一规范化 API 响应中的好友头像、群头像和群聊成员头像地址，兼容旧服务端保存的相对路径及 Android WebView 的独立来源。
+- 群聊消息发送者头像增加显示前路径兜底，修复部分部署环境中头像指向错误前端主机的问题。
+- npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.21`（`versionCode 30021`），并同步更新中英文及 F-Droid 发布说明。
+
+- Synchronized the upstream web frontend's avatar-storage update: user and group avatars now use permanent storage so temporary-file cleanup cannot invalidate them.
+- Normalized friend, group, and group-message avatar URLs throughout API responses, supporting relative paths stored by older servers and Android WebView's separate origin.
+- Added a rendering fallback for group-message sender avatars, fixing deployments where avatar URLs incorrectly targeted the frontend host.
+- Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.21` (`versionCode 30021`), together with the English, Chinese, and F-Droid release documentation.
+
 ## 3.0.20 — 2026-09-03
 
 - 修复 3.0.19 Release APK 启动后闪退的问题：暂停 R8 代码压缩与 Android 资源裁剪，避免反射和 JNI 依赖在运行时被错误裁剪。
