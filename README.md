@@ -5,7 +5,7 @@
 > [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite) 的 Android 客户端，使用 Capacitor 8 打包上游 React/TypeScript 前端，并内嵌 Tor。
 
 [![Upstream](https://img.shields.io/badge/上游-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/版本-3.0.21-orange)](package.json)
+[![Version](https://img.shields.io/badge/版本-3.0.22-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## 项目范围
@@ -52,8 +52,8 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 |---|---|
 | 应用名称 | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| 版本 | `3.0.21` |
-| Version Code | `30021` |
+| 版本 | `3.0.22` |
+| Version Code | `30022` |
 | 最低 Android API | 24 |
 
 ## 构建

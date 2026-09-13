@@ -17,8 +17,8 @@ This directory is staging material. The final metadata file belongs in the
 4. Confirm that generated directories and secrets are absent with
    `git status --ignored` and GitHub's web UI. Never commit `node_modules`,
    `dist`, Android build output, `local.properties`, or a keystore.
-5. Tag the exact reviewed commit: `git tag -s v3.0.21 -m "PaperPhoneLite 3.0.21"`
-   and then push that tag. If `v3.0.21` already exists, do not move it: release a
+5. Tag the exact reviewed commit: `git tag -s v3.0.22 -m "PaperPhoneLite 3.0.22"`
+   and then push that tag. If `v3.0.22` already exists, do not move it: release a
    new version/code and tag instead.
 
 ## 2. Verify the source build
@@ -59,8 +59,8 @@ creating duplicates:
 - fdroiddata merge request: `fdroid/fdroiddata!46295`
 
 The merge-request branch must contain only the latest PaperPhoneLite build
-entry. The current candidate is `3.0.21` (`versionCode 30021`) at the immutable
-`v3.0.21` tag declared by the metadata. Its signed GitHub build must pass
+entry. The current candidate is `3.0.22` (`versionCode 30022`) at the immutable
+`v3.0.22` tag declared by the metadata. Its signed GitHub build must pass
 installation and runtime testing before submission; F-Droid will independently
 reproduce and sign the unsigned build.
 
@@ -99,7 +99,7 @@ the app is accepted.
 2. Rebase it on current `fdroid/fdroiddata:master` when required by maintainers.
 3. Copy `fdroid/com.fm619.paperphonelite.yml` to
    `metadata/com.fm619.paperphonelite.yml` in that clone.
-4. Verify that public tag `v3.0.21` resolves to the same immutable commit
+4. Verify that public tag `v3.0.22` resolves to the same immutable commit
    recorded by the release and metadata review.
 5. Run the official checks in the F-Droid buildserver container:
 

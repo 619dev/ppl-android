@@ -5,7 +5,7 @@
 > Android client for [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite), packaging the upstream React/TypeScript frontend with Capacitor 8 and a bundled Tor client.
 
 [![Upstream](https://img.shields.io/badge/Upstream-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/Version-3.0.21-orange)](package.json)
+[![Version](https://img.shields.io/badge/Version-3.0.22-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## Scope
@@ -52,8 +52,8 @@ ntfy is the only supported, optional Android background-notification path. When 
 |---|---|
 | App name | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| Version | `3.0.21` |
-| Version code | `30021` |
+| Version | `3.0.22` |
+| Version code | `30022` |
 | Minimum Android API | 24 |
 
 ## Build
