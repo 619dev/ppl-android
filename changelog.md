@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.23 — 2026-09-24
+
+- 修复三星 Galaxy A34 等 One UI 设备从语言选择或其他设置二级页侧滑返回时，错误切换到“发现”或“联系人”页面的问题。
+- 所有个人设置二级页改用真实路由历史，并在二级页隐藏底部导航栏，避免系统边缘返回手势结束时误触底部标签。
+- 完善近三年 Galaxy S/A 系列、Z Flip 与 Z Fold 的 Android edge-to-edge、安全区域、横屏、短屏、折叠大屏及减少动画适配。
+- npm、Android 原生版本、F-Droid 元数据及个人信息页底部版本统一更新为 `3.0.23`（`versionCode 30023`），并同步更新中英文及 Fastlane 发布说明。
+
+- Fixed One UI edge-back gestures on devices such as the Samsung Galaxy A34 incorrectly switching from Language or another settings detail screen to Discover or Contacts.
+- Moved every Profile settings detail screen into browser/navigation history and hid the bottom tab bar on detail screens, preventing a completed edge-back gesture from activating an underlying tab.
+- Expanded Android edge-to-edge, safe-area, landscape, short-display, unfolded Galaxy Z Fold, Galaxy Z Flip, recent Galaxy S/A, and reduced-motion layout support.
+- Updated npm, Android native, F-Droid metadata, and Profile-footer versions to `3.0.23` (`versionCode 30023`), together with the English, Chinese, and Fastlane release documentation.
+
 ## 3.0.21 — 2026-09-12
 
 - 同步上游 Web 前端的头像存储更新：用户头像与群头像上传改用永久存储，避免临时文件清理后头像失效。

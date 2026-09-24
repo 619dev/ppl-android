@@ -9,7 +9,9 @@ export default function TabBar() {
   const unread = useStore(s => s.unread)
 
   // Hide TabBar on chat, user profile, group info pages
-  const hiddenPaths = ['/chat/', '/user/', '/group/']
+  // Detail screens own the whole viewport. Keeping the tab bar mounted here can
+  // also turn the end of an Android edge-back gesture into a tab click.
+  const hiddenPaths = ['/chat/', '/user/', '/group/', '/profile/', '/privacy', '/terms']
   if (hiddenPaths.some(p => location.pathname.startsWith(p))) return null
 
   const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0)

@@ -72,6 +72,7 @@ function ProtectedLayout() {
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:section" element={<Profile />} />
           <Route path="/user/:id" element={<UserProfile />} />
           <Route path="/group/:id" element={<GroupInfo />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />

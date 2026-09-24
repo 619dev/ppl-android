@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useStore, ProxyConfig } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { clearKeys, getKeys } from '../crypto/keystore'
@@ -14,11 +14,12 @@ import { PRESENTATION_CODECS, type PresentationCodecId } from '../crypto/present
 import { disablePresentationCrypto, enablePresentationCrypto, getPresentationSettings, isPresentationUnlocked, lockPresentationCrypto, unlockPresentationCrypto, updatePresentationSettings } from '../crypto/presentationCrypto'
 
 type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy' | 'message-privacy'
-const APP_VERSION = '3.0.21'
+const APP_VERSION = '3.0.23'
 
 export default function Profile() {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const { section } = useParams<{ section?: string }>()
   const user = useStore(s => s.user)
   const setAuth = useStore(s => s.setAuth)
   const theme = useStore(s => s.theme)
@@ -27,7 +28,12 @@ export default function Profile() {
   const lang = useStore(s => s.lang) as LangCode
   const setLang = useStore(s => s.setLang)
 
-  const [subView, setSubView] = useState<SubView>(null)
+  const validSections: Exclude<SubView, null>[] = ['password', 'avatar', '2fa', 'sessions', 'language', 'fingerprint', 'myqr', 'proxy', 'message-privacy']
+  const subView: SubView = section && validSections.includes(section as Exclude<SubView, null>)
+    ? section as Exclude<SubView, null>
+    : null
+  const openSubView = (view: Exclude<SubView, null>) => navigate(`/profile/${view}`)
+  const closeSubView = () => navigate('/profile', { replace: true })
   const [clearingCache, setClearingCache] = useState(false)
 
   // ntfy state
@@ -110,15 +116,16 @@ export default function Profile() {
     }
   }
 
-  if (subView === 'password') return <ChangePassword onBack={() => setSubView(null)} t={t} />
-  if (subView === 'avatar') return <ChangeAvatar onBack={() => setSubView(null)} t={t} user={user} setAuth={setAuth} />
-  if (subView === '2fa') return <TwoFactorAuth onBack={() => setSubView(null)} t={t} />
-  if (subView === 'sessions') return <Sessions onBack={() => setSubView(null)} t={t} />
-  if (subView === 'language') return <LanguagePicker onBack={() => setSubView(null)} t={t} lang={lang} setLang={setLang} />
-  if (subView === 'fingerprint') return <KeyFingerprint onBack={() => setSubView(null)} t={t} user={user} />
-  if (subView === 'myqr') return <MyQRCode onBack={() => setSubView(null)} t={t} user={user} />
-  if (subView === 'proxy') return <ProxySettings onBack={() => setSubView(null)} t={t} />
-  if (subView === 'message-privacy') return <MessagePrivacySettings onBack={() => setSubView(null)} t={t} />
+  if (section && !subView) return <Navigate to="/profile" replace />
+  if (subView === 'password') return <ChangePassword onBack={closeSubView} t={t} />
+  if (subView === 'avatar') return <ChangeAvatar onBack={closeSubView} t={t} user={user} setAuth={setAuth} />
+  if (subView === '2fa') return <TwoFactorAuth onBack={closeSubView} t={t} />
+  if (subView === 'sessions') return <Sessions onBack={closeSubView} t={t} />
+  if (subView === 'language') return <LanguagePicker onBack={closeSubView} t={t} lang={lang} setLang={setLang} />
+  if (subView === 'fingerprint') return <KeyFingerprint onBack={closeSubView} t={t} user={user} />
+  if (subView === 'myqr') return <MyQRCode onBack={closeSubView} t={t} user={user} />
+  if (subView === 'proxy') return <ProxySettings onBack={closeSubView} t={t} />
+  if (subView === 'message-privacy') return <MessagePrivacySettings onBack={closeSubView} t={t} />
 
   return (
     <div className="page" id="profile-page">
@@ -141,31 +148,31 @@ export default function Profile() {
 
         {/* Account */}
         <div className="section-title">{t('profile.account')}</div>
-        <div className="settings-item" onClick={() => setSubView('avatar')}>
+        <div className="settings-item" onClick={() => openSubView('avatar')}>
           <span className="label"><Camera size={16} /> {t('avatar.title')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
-        <div className="settings-item" onClick={() => setSubView('myqr')}>
+        <div className="settings-item" onClick={() => openSubView('myqr')}>
           <span className="label"><Smartphone size={16} /> {t('profile.my_qr')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
-        <div className="settings-item" onClick={() => setSubView('password')}>
+        <div className="settings-item" onClick={() => openSubView('password')}>
           <span className="label"><KeyRound size={16} /> {t('profile.change_password')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
-        <div className="settings-item" onClick={() => setSubView('2fa')}>
+        <div className="settings-item" onClick={() => openSubView('2fa')}>
           <span className="label"><Shield size={16} /> {t('profile.two_factor')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
-        <div className="settings-item" onClick={() => setSubView('sessions')}>
+        <div className="settings-item" onClick={() => openSubView('sessions')}>
           <span className="label"><Smartphone size={16} /> {t('profile.sessions')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
-        <div className="settings-item" onClick={() => setSubView('fingerprint')}>
+        <div className="settings-item" onClick={() => openSubView('fingerprint')}>
           <span className="label"><Fingerprint size={16} /> {t('fingerprint.title')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
-        <div className="settings-item" onClick={() => setSubView('message-privacy')}>
+        <div className="settings-item" onClick={() => openSubView('message-privacy')}>
           <span className="label"><Shield size={16} /> {t('profile.message_privacy')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>
@@ -178,7 +185,7 @@ export default function Profile() {
           <span className="label"><Moon size={16} /> {t('profile.theme')}</span>
           <div className={`toggle ${theme === 'dark' ? 'active' : ''}`} />
         </div>
-        <div className="settings-item" onClick={() => setSubView('language')}>
+        <div className="settings-item" onClick={() => openSubView('language')}>
           <span className="label"><Globe size={16} /> {t('profile.language')}</span>
           <span className="value">{langNames[lang]}</span>
         </div>
@@ -187,7 +194,7 @@ export default function Profile() {
 
         {/* Network */}
         <div className="section-title">{t('profile.network')}</div>
-        <div className="settings-item" onClick={() => setSubView('proxy')}>
+        <div className="settings-item" onClick={() => openSubView('proxy')}>
           <span className="label"><Wifi size={16} /> {t('proxy.title')}</span>
           <span className="arrow"><ChevronRight size={14} /></span>
         </div>

@@ -1,0 +1,3 @@
+Fixed Samsung One UI edge-back gestures incorrectly switching from settings detail screens to another bottom tab.
+Settings detail screens now participate in navigation history and hide the bottom tab bar to prevent gesture click-through.
+Improved edge-to-edge, safe-area, landscape, short-display, Galaxy S/A, Z Flip, and Z Fold layouts.
