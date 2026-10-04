@@ -127,3 +127,22 @@ update check can then discover new versions.
 F-Droid signs its APK independently. Users switching between a GitHub-signed
 build and the F-Droid build must uninstall first unless reproducible-build
 signing is separately configured and accepted.
+
+## 9. Preserve the release APK layout during signing
+
+When signing an unsigned Gradle APK for GitHub, use:
+
+```sh
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.0.24/app-release.apk
+```
+
+Set `ANDROID_SDK_ROOT`, `KEYSTORE_PASSWORD` and `KEY_PASSWORD` in the local
+signing environment. The script uses Android Build Tools 35.0.0 and preserves
+ZIP alignment with `--alignment-preserved true`; v2/v3 signing is sufficient
+for this app's minimum Android version. Never store signing passwords in source.
+
+Before uploading, copy its signature onto the independent F-Droid unsigned APK
+using `apksigcopier copy`, then verify that APK with `apksigner verify`.
+The resulting APK must verify and match the signed release byte for byte.
+Default apksigner realignment can break this check even when every extracted
+file and the original unsigned APK match.
