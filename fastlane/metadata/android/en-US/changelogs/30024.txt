@@ -1,0 +1,1 @@
+Remove unused Maven repository and permissions. Disable app backup and device transfer. Restrict attachment sharing to cache files. Disclose direct Tor bridge discovery and fallback.

@@ -10,17 +10,17 @@ AutoName: PaperPhoneLite
 
 RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
+Binaries: https://github.com/619dev/ppl-android/releases/download/v%v/app-release.apk
 
 Builds:
-  - versionName: 3.0.23
-    versionCode: 30023
-    commit: v3.0.23
+  - versionName: 3.0.24
+    versionCode: 30024
+    commit: v3.0.24
     subdir: android/app
     sudo:
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
       - apt-get update
-      - apt-get install -y openjdk-21-jdk-headless -t forky nodejs npm
-      - update-java-alternatives -a
+      - apt-get install -y -t forky nodejs npm
     init:
       - cd ../..
       - npm ci
@@ -28,14 +28,15 @@ Builds:
       - npx cap sync android --deployment
     gradle:
       - yes
-    output: build/outputs/apk/release/app-release-unsigned.apk
     scanignore:
-      - android/build.gradle
       - node_modules/@capacitor/cli/assets/capacitor-cordova-android-plugins.tar.gz
     scandelete:
       - node_modules
+    ndk: 27.0.12077973
+
+AllowedAPKSigningKeys: 39c14b942f92520723292a32759f5644638e4123ece96ed8fce5177545c39952
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 3.0.23
-CurrentVersionCode: 30023
+CurrentVersion: 3.0.24
+CurrentVersionCode: 30024

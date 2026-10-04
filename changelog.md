@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.0.24 — 2026-10-04
+
+- 移除不需要的 Guardian Maven 仓库及对应 F-Droid scanignore。
+- 禁止 Android 备份与设备迁移复制应用数据，保护本地身份密钥和消息缓存。
+- 移除未使用的存储与音频设置权限，仅允许 FileProvider 分享附件缓存。
+- 中英文商店说明披露直连 Tor 网桥服务及内置 WebTunnel 备用网桥。
+
+- Removed the unused Guardian Maven repository and its F-Droid scanner exception.
+- Disabled Android backup and excluded app data from cloud backup and device transfer.
+- Removed unused storage and audio-settings permissions and restricted FileProvider to attachment caches.
+- Disclosed direct Tor bridge discovery and the built-in WebTunnel fallback in both store descriptions.
+
 ## 3.0.23 — 2026-09-24
 
 - 修复三星 Galaxy A34 等 One UI 设备从语言选择或其他设置二级页侧滑返回时，错误切换到“发现”或“联系人”页面的问题。
