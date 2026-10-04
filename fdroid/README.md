@@ -59,7 +59,7 @@ creating duplicates:
 - fdroiddata merge request: `fdroid/fdroiddata!46295`
 
 The merge-request branch must contain only the latest PaperPhoneLite build
-entry. The prepared, unpublished candidate is `3.0.24` (`versionCode 30024`) at the immutable
+entry. The current candidate is `3.0.24` (`versionCode 30024`) at the immutable
 `v3.0.24` tag declared by the metadata. Create this new tag only after the fixes are committed and verified. Its signed GitHub build must pass
 installation and runtime testing before submission; F-Droid will independently
 reproduce and sign the unsigned build.

@@ -58,5 +58,10 @@ Description:
 > chats, attachments, local offline data, disappearing messages, safety
 > numbers, optional text-appearance encryption, and optional ntfy notifications.
 >
+> If Tor has no circuit after 20 seconds, the app connects directly outside Tor
+> to bridges.torproject.org to request WebTunnel bridges with country code cn.
+> It includes a recovery WebTunnel bridge at ame.neverfeltsogood.top for a known stale cached bridge.
+> Android system backup and app-data device transfer are disabled.
+>
 > A compatible self-hosted server is required. The app does not include Google
 > Play services, Firebase, advertising, or analytics.
