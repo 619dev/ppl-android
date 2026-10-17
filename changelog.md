@@ -15,6 +15,11 @@ This file records Android releases of `ppl-android` based on [619dev/PaperPhoneL
 - Fixed paginated catch-up, durable cache before cursor advancement, account isolation and group history pagination.
 - Preserved Android embedded Tor, native attachment storage, Samsung navigation and safe-area adaptations.
 
+- 发布源码：[v3.1.0](https://github.com/619dev/ppl-android/tree/v3.1.0)（`c79f5a8`）；[签名 APK 与校验文件](https://github.com/619dev/ppl-android/releases/tag/v3.1.0)。
+- F-Droid 初次收录 MR !46295 已合并；[3.1.0 更新 MR !52845](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845) 只保留最新构建条目。
+- 本地构建、回归、lint、签名与签名复制一致性检查通过；真机运行验证待完成，独立可复现构建以 F-Droid CI 为准。
+- Signed APK published from immutable source tag `v3.1.0` (`c79f5a8`); F-Droid version update submitted as !52845. Local checks passed; native-device acceptance is pending.
+
 ## 3.0.24 — 2026-10-04
 
 - 移除不需要的 Guardian Maven 仓库及对应 F-Droid scanignore。

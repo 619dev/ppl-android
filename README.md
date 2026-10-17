@@ -16,7 +16,7 @@
 
 - 私聊、群聊、联系人、群组及好友申请。
 - 文字、图片、视频、文档、语音、Emoji 和 Telegram 贴纸消息。
-- X25519 + ML-KEM-768 混合密钥协商、XSalsa20-Poly1305 消息加密、群聊 Sender Key 和安全号码。
+- X25519 密钥协商、XSalsa20-Poly1305 消息加密、Ed25519 消息及群密钥签名、安全号码与身份验证标识。
 - 消息同步、本地离线缓存、持久化发件箱、已读状态和输入状态。
 - 消息自动删除、拉黑、好友标签、二维码和 TOTP 两步验证。
 - 额外消息密码、8 种文本外观、前后台自动锁定及启动解锁提示。
@@ -40,11 +40,11 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 
 ## 本地数据与密钥
 
-- 上游前端通过 IndexedDB 保存身份密钥和 Sender Key，通过 localStorage 保存会话、设置、消息缓存与离线数据。
+- 身份密钥、Sender Key 和身份信任记录使用按账号隔离的浏览器秘密存储，以不可导出的 WebCrypto AES-GCM 密钥加密后存入 IndexedDB；这不等同于 Android Keystore。会话、设置、消息缓存与离线数据使用 localStorage。
 - 消息缓存持久化前会移除已解密的明文字段，但当前 3.1.0 前端没有把整个聊天缓存交给 Android Keystore 加密。
 - Android 系统备份已关闭，并明确排除云备份及设备迁移中的应用数据（包括 WebView 身份密钥和消息缓存）。
 - 启用“文本外观加密”后，应用启动会要求输入额外密码；错误或取消解锁时只显示文本外观密文。该功能不会替代设备锁或 Android Keystore。
-- 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.0 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
+- 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.1.0 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
 - 清理应用数据或卸载应用可能永久删除本地密钥及无法恢复的历史消息。
 
 ## Android 标识
@@ -62,27 +62,57 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 需要 Node.js、npm、JDK 21 和 Android SDK。
 
 ```bash
-npm install
+npm ci
 npm run build
-npx cap sync android
+npx cap sync android --deployment
 cd android
 ./gradlew assembleDebug
 ```
 
 调试 APK 位于 `android/app/build/outputs/apk/debug/app-debug.apk`。
 
-Release 构建需要未提交到 Git 的 `paperphone-release.keystore`，并应通过环境变量提供签名密码：
+## Release 构建与验证
+
+为兼容 F-Droid 签名复制，正式发布先生成未签名 APK，再用脚本保留 ZIP 对齐进行签名。构建前取消签名环境变量：
 
 ```bash
-export KEYSTORE_PASSWORD='...'
-export KEY_PASSWORD='...'
+npm ci
+npm run test:security
+npm run test:i18n
+npm run build
+npx cap sync android --deployment
 cd android
-./gradlew clean assembleRelease
+env -u KEYSTORE_PASSWORD -u KEY_PASSWORD ./gradlew clean assembleRelease lintRelease
+cd ..
 ```
 
-有签名环境变量时，Release APK 位于 `android/app/build/outputs/apk/release/app-release.apk`；未提供签名信息时会生成 `app-release-unsigned.apk`。Release 仅支持 `arm64-v8a`，并继续暂停 R8 与资源裁剪以避免启动闪退；签名版需在发布前完成实际安装和运行测试。正式 Android APK 发布在本仓库的 [GitHub Releases](https://github.com/619dev/ppl-android/releases)。F-Droid 收录正在通过 [RFP #4291](https://gitlab.com/fdroid/rfp/-/work_items/4291) 和 [fdroiddata MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) 推进；不发布到 Google Play。F-Droid 会使用自己的密钥签名，因此其 APK 与 GitHub Release APK 不能互相覆盖安装。
+未签名产物为 `android/app/build/outputs/apk/release/app-release-unsigned.apk`。在本机私有环境中配置 `ANDROID_SDK_ROOT`、`KEYSTORE_PASSWORD` 和 `KEY_PASSWORD` 后执行：
 
-F-Droid 提交与验证流程见 [`fdroid/README.md`](fdroid/README.md)，候选构建元数据见 [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml)。
+```bash
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.0/app-release.apk
+```
+
+默认密钥库路径为 `paperphone-release.keystore`，可通过 `PPL_RELEASE_KEYSTORE` 指向外部私有文件。不要提交密钥库或密码。脚本使用 Build Tools 35.0.0，保留 ZIP 对齐并验证 v2/v3 签名。Release 仅支持 `arm64-v8a`，暂停 R8 与资源裁剪。
+
+## 当前发布与 F-Droid
+
+- [3.1.0 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.0)：包含签名 APK 和 `SHA256SUMS`。
+- 固定源码标签 `v3.1.0` 对应提交 `c79f5a819afeb76dc03030da6bedf9536f2615bb`；上游客户端基线为 `9bf6aaf`。
+- 初次收录 [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) 已合并；3.1.0 更新见 [MR !52845](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845)。元数据只保留 3.1.0（30100）。
+- 本地前端构建、安全与翻译回归、Android Release 构建、lint、签名校验及签名复制一致性检查已通过。本版真机运行验证尚未完成；F-Droid 独立构建状态以 MR 的 CI 为准。
+- F-Droid 元数据启用了 `Binaries` 和允许的签名证书，用于验证可复现构建。跨渠道覆盖安装取决于最终 APK 证书是否相同，请先核对签名；本项目不发布到 Google Play。
+
+提交、签名与验证流程见 [`fdroid/README.md`](fdroid/README.md)，构建元数据见 [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml)。
+
+## 3.1.0 升级与安全边界
+
+双方客户端和服务端需配套升级。双方通过线下交流的文本外观密码完成身份握手；绿色身份标识需要有效证明及对方对本次挑战的回执，签名本身不证明陌生公钥属于目标联系人。身份密钥变化会撤销信任，需重新验证。
+
+群组发送需要已验证的成员身份和带签名的 Sender Key 分发。成员变动后使用新的密钥 epoch；离线客户端会恢复历史 epoch 的密钥。轮换无法撤回离群成员已持有的旧密钥或已读明文，也无法恢复此前已丢失的密钥。
+
+旧版未签名消息会明确标记；联系人身份固定后拒绝未签名消息，包括旧历史。当前注册字段 `kem_pub` 实际承载 Ed25519 签名公钥，签名消息路径不使用 ML-KEM，不能宣称具备可工作的后量子密钥注册。消息签名不会对上传的附件文件本身提供端到端加密。每个会话的本地消息缓存最多保留 2,000 条，服务端自动删除和附件保留策略仍生效。
+
+测试覆盖与手工验收步骤见 [`tests/README.md`](tests/README.md)。
 
 ## 与上游同步
 

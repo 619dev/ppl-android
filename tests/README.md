@@ -1,15 +1,18 @@
 # Security and localization tests
 
-Run these commands from the repository root after installing the client dependencies with `npm ci --prefix client`:
+This Android repository contains the shared client suites at `tests/` and client code at `src/`. Run from this repository's root:
 
 ```bash
-npm --prefix client run test:security
-npm --prefix client run test:i18n
-npm --prefix client run build
-cargo test --manifest-path server/Cargo.toml
+npm ci
+npm run test:security
+npm run test:i18n
+npm run build
+npx cap sync android --deployment
+cd android
+./gradlew assembleRelease lintRelease
 ```
 
-The normal Rust run does not execute the ignored MySQL integration test. Use the explicit command below with a disposable local MySQL instance; the test account needs permission to create and drop its randomly named database. Do not use a production database. The fixture uses a local Unix socket and an ephemeral loopback WebSocket port; it does not require Redis. A failed run may leave its temporary database for investigation.
+The three security suites cover authenticated messaging, signed groups and synchronization. The localization suite checks 92 security keys across eight languages. These commands passed for the 3.1.0 release. Native-device runtime acceptance is still pending.
 
 ## Cryptographic and synchronization coverage
 
@@ -28,20 +31,9 @@ new ciphertext, multi-epoch catch-up, unsigned history labelling and account
 isolation. The sync suite covers more than 100 pages, ciphertext persistence
 before cursor advancement, storage/network failures and account changes.
 
-## Server integration test
+## Upstream server integration
 
-The Rust test in [groups_security_tests.rs](../../server/src/routes/groups_security_tests.rs) exercises the real
-MySQL schema, HTTP routes and WebSocket handler. It verifies permissions,
-revocation on a still-open socket, stale-epoch rejection, exact distribution
-recipients, offline key history, paginated sync, commit-order serialization,
-concurrent upload/leave, rejoining, identity rotation and repeatable migrations.
-Its signature fixtures are transport fixtures; the client suites above verify
-real signatures and encryption. To run against an isolated local instance:
-
-    PP_GROUP_TEST_MYSQL_SOCKET=/path/to/test.sock cargo test --manifest-path server/Cargo.toml signed_group_revocation_and_catch_up -- --ignored
-
-The test creates and drops its own random database. These checks are not a
-two-browser UI test or an independent cryptographic audit.
+This repository does not contain a Rust server or MySQL fixture. Server integration tests and disposable-database setup belong to [PaperPhoneLite upstream](https://github.com/619dev/PaperPhoneLite). Run server tests from an upstream checkout following that checkout's test documentation; the client suites here use mocked transport and persistence.
 
 ## Protocol and trust model
 
@@ -125,7 +117,7 @@ on focus/visibility and update labels and badges on trust changes.
 
 ## Eight-language validation
 
-Run `npm --prefix client run test:i18n` from the repository root to validate all 92 security-related text keys
+Run `npm run test:i18n` from the repository root to validate all 92 security-related text keys
 in Chinese, English, Japanese, Korean, French, German, Russian and Spanish.
 The suite checks explicit coverage (without fallback), duplicate keys,
 placeholder consistency, current-language error rendering and verbatim handling
@@ -136,6 +128,6 @@ of protocol constants and user-supplied text.
 
 Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Open the group member list to check refreshed trust, then exercise leave/kick, offline reconnect and pending-key recovery. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
 
-These source changes are unreleased; the package version remains 3.1.0. Tests of this shared source do not validate published native clients or Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
+Android 3.1.0 (30100) is published at [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.0), with immutable source commit `c79f5a819afeb76dc03030da6bedf9536f2615bb`. Automated client tests do not replace native-device acceptance or validate upstream Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
 
-See the [main README](../../README_EN.md), [中文说明](../../README.md), [deployment/migration guide](../../DEPLOY_EN.md) and [Tor architecture](../../TOR_DEPLOYMENT.md) for operating requirements. The client suites use cryptographic implementations with mocked transport/persistence; the server fixture uses real database/routes with transport signature fixtures. Together they provide regression coverage, not an independent audit or a native-device UI test.
+See the [main README](../README_EN.md), [中文说明](../README.md), and [F-Droid release guide](../fdroid/README.md). Deployment and server migration guidance is maintained in the [upstream repository](https://github.com/619dev/PaperPhoneLite). The client suites provide regression coverage with real cryptography and mocked transport/persistence; they are not an independent audit or native-device UI test.

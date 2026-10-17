@@ -16,7 +16,7 @@ The current client provides:
 
 - Private and group chats, contacts, groups, and friend requests.
 - Text, image, video, document, voice, emoji, and Telegram sticker messages.
-- X25519 + ML-KEM-768 hybrid key agreement, XSalsa20-Poly1305 message encryption, group Sender Keys, and safety numbers.
+- X25519 key agreement, XSalsa20-Poly1305 message encryption, Ed25519 message and group-key signatures, safety numbers, and identity badges.
 - Message synchronization, local offline caches, a persistent outbox, read receipts, and typing state.
 - Message expiry, blocking, friend labels, QR flows, and TOTP two-factor authentication.
 - An extra message password, eight text presentations, foreground/background locking, and a startup unlock prompt.
@@ -40,11 +40,11 @@ ntfy is the only supported, optional Android background-notification path. When 
 
 ## Local Data and Keys
 
-- The upstream frontend stores identity keys and Sender Keys in IndexedDB, while sessions, settings, message caches, and offline data use localStorage.
+- Identity keys, Sender Keys and identity trust records use account-scoped browser secret storage, encrypted in IndexedDB with a non-exportable WebCrypto AES-GCM key. This is not Android Keystore. Sessions, settings, message caches and offline data use localStorage.
 - Decrypted message fields are removed before message-cache persistence, but the current 3.1.0 frontend does not encrypt the entire chat cache with Android Keystore.
 - Android system backup is disabled, and app data (including WebView identity keys and message caches) is excluded from cloud backup and device transfer.
 - When text-appearance encryption is enabled, startup asks for the extra password; cancelling or entering an incorrect password leaves only the styled ciphertext visible. This does not replace a device lock or Android Keystore.
-- Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.0 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
+- Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.1.0 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
 - Clearing app data or uninstalling the app can permanently remove local keys and unrecoverable history.
 
 ## Android Identity
@@ -62,27 +62,57 @@ ntfy is the only supported, optional Android background-notification path. When 
 Node.js, npm, JDK 21, and the Android SDK are required.
 
 ```bash
-npm install
+npm ci
 npm run build
-npx cap sync android
+npx cap sync android --deployment
 cd android
 ./gradlew assembleDebug
 ```
 
 The debug APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-A release build requires a private, untracked `paperphone-release.keystore`. Supply signing passwords through environment variables:
+## Release Build and Verification
+
+For F-Droid signature copying, build an unsigned APK first, then sign it with the alignment-preserving script. Remove signing variables from the build environment:
 
 ```bash
-export KEYSTORE_PASSWORD='...'
-export KEY_PASSWORD='...'
+npm ci
+npm run test:security
+npm run test:i18n
+npm run build
+npx cap sync android --deployment
 cd android
-./gradlew clean assembleRelease
+env -u KEYSTORE_PASSWORD -u KEY_PASSWORD ./gradlew clean assembleRelease lintRelease
+cd ..
 ```
 
-With signing environment variables, the release APK is written to `android/app/build/outputs/apk/release/app-release.apk`; without signing credentials, Gradle produces `app-release-unsigned.apk`. Releases support `arm64-v8a` only and continue to disable R8 and resource shrinking to avoid startup crashes; signed builds must pass installation and runtime testing before release. Official Android APKs are distributed through this repository's [GitHub Releases](https://github.com/619dev/ppl-android/releases). F-Droid inclusion is in progress through [RFP #4291](https://gitlab.com/fdroid/rfp/-/work_items/4291) and [fdroiddata MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295); the app is not published on Google Play. F-Droid signs its build with a separate key, so F-Droid and GitHub Release APKs cannot upgrade each other in place.
+The unsigned output is `android/app/build/outputs/apk/release/app-release-unsigned.apk`. Set `ANDROID_SDK_ROOT`, `KEYSTORE_PASSWORD`, and `KEY_PASSWORD` in a private local environment, then run:
 
-See [`fdroid/README.md`](fdroid/README.md) for the submission and verification procedure and [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml) for the candidate build metadata.
+```bash
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.0/app-release.apk
+```
+
+The default keystore is `paperphone-release.keystore`; `PPL_RELEASE_KEYSTORE` can point to an external private file. Never commit keystores or passwords. The script uses Build Tools 35.0.0, preserves ZIP alignment and verifies v2/v3 signatures. Release builds support `arm64-v8a` only and disable R8 and resource shrinking.
+
+## Current Release and F-Droid
+
+- [Release 3.1.0](https://github.com/619dev/ppl-android/releases/tag/v3.1.0) includes the signed APK and `SHA256SUMS`.
+- Immutable tag `v3.1.0` resolves to `c79f5a819afeb76dc03030da6bedf9536f2615bb`; the upstream client baseline is `9bf6aaf`.
+- Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) was merged. The 3.1.0 update is [MR !52845](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845). Metadata retains only 3.1.0 (30100).
+- Local frontend build, security/localization regression tests, Android Release build, lint, signature verification and signature-copy equality checks passed. Device runtime testing is pending; consult MR CI for independent F-Droid build status.
+- F-Droid metadata enables `Binaries` and the allowed signing certificate for reproducibility verification. In-place upgrades across channels depend on matching APK certificates; verify the final signatures first. This app is not published on Google Play.
+
+See [`fdroid/README.md`](fdroid/README.md) for publishing and verification, and [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml) for build metadata.
+
+## 3.1.0 Upgrade and Security Boundaries
+
+Both clients and the server must be upgraded together. Identity verification uses a text-appearance password exchanged offline. A green identity badge requires a valid peer proof and a receipt for the local challenge; a signature alone does not establish ownership of an unknown key. Identity changes revoke trust and require verification again.
+
+Group sends require verified member identities and signed Sender Key distribution. Membership changes advance the key epoch; offline clients recover distributions for historical epochs. Rotation cannot revoke old keys or plaintext already held by a departed member, or recover keys previously lost.
+
+Legacy unsigned messages are labelled explicitly. Once a contact identity is pinned, unsigned messages, including old history, are rejected. The registration field `kem_pub` currently holds an Ed25519 signing public key; the signed-message path does not use ML-KEM and does not implement working post-quantum key registration. Message signing does not end-to-end encrypt uploaded attachment bytes. Local caches retain at most 2,000 messages per conversation; server auto-delete and attachment retention still apply.
+
+See [`tests/README.md`](tests/README.md) for regression coverage and manual acceptance steps.
 
 ## Upstream Synchronization
 

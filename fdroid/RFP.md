@@ -1,11 +1,9 @@
-* [x] The app complies with the [inclusion criteria](https://f-droid.org/docs/Inclusion_Policy/?title=Inclusion_Policy).
-* [x] The app is not already [listed](https://gitlab.com/search?scope=issues&group_id=28397) in the repo or issue tracker.
-* [x] The app has not already [been requested](https://gitlab.com/search?scope=issues&project_id=2167965).
-* [x] The upstream app source code repo contains the app metadata _(summary/description/images/changelog/etc)_ in a [Fastlane](https://gitlab.com/snippets/1895688) or [Triple-T](https://gitlab.com/snippets/1901490) folder structure.
-* [x] The original app author has been notified, and does not oppose the inclusion.
-* [ ] Optionally [donated](https://f-droid.org/donate/) to support the maintenance of this app in F-Droid.
+# Original F-Droid packaging request
 
----
+Historical reference for [RFP #4291](https://gitlab.com/fdroid/rfp/-/work_items/4291).
+Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295)
+was merged. Version updates use a separate MR; do not resubmit the original
+new-app checklist.
 
 #### APPLICATION ID: com.fm619.paperphonelite
 
@@ -39,7 +37,11 @@ Source ref: `v3.1.0` (the immutable release tag must resolve to the reviewed com
 
 Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.0
 
-fdroiddata MR: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295
+Version-update MR: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845
+
+Source commit: `c79f5a819afeb76dc03030da6bedf9536f2615bb`. The recipe retains only 3.1.0 (30100).
+
+Local build, regression tests, lint and APK signature checks passed; native-device runtime testing is pending. Independent F-Droid reproduction status is recorded in MR CI.
 
 Why do you want this app added to F-Droid:
 
@@ -56,7 +58,8 @@ Description:
 > PaperPhoneLite is a client for private messaging through a self-hosted
 > PaperPhoneLite onion service. It bundles Tor and supports private and group
 > chats, attachments, local offline data, disappearing messages, safety
-> numbers, optional text-appearance encryption, and optional ntfy notifications.
+> numbers, signed messages and group keys, offline-password identity verification,
+> optional text-appearance encryption, and optional ntfy notifications.
 >
 > If Tor has no circuit after 20 seconds, the app connects directly outside Tor
 > to bridges.torproject.org to request WebTunnel bridges with country code cn.
@@ -65,3 +68,7 @@ Description:
 >
 > A compatible self-hosted server is required. The app does not include Google
 > Play services, Firebase, advertising, or analytics.
+
+Version 3.1.0 requires compatible clients and server, with member identity
+verification before group sending. See [release guidance](README.md) and the
+[client security boundaries](../README_EN.md#310-upgrade-and-security-boundaries).
