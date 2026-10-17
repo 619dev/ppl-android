@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { useStore, ProxyConfig } from '../store'
+import { useStore } from '../store'
 import { useI18n } from '../hooks/useI18n'
 import { clearKeys, getKeys } from '../crypto/keystore'
 import { clearAllSenderKeys } from '../crypto/groupCrypto'
@@ -8,13 +8,13 @@ import { disconnectWs } from '../api/socket'
 import { get, post, put, del, uploadFile } from '../api/http'
 import { allLangs, langNames, LangCode } from '../i18n'
 import { QRCodeCanvas } from '../components/QRCode'
-import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Monitor, CheckCircle, FileText, ExternalLink, Wifi, Trash2, AlertTriangle } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Smartphone, Check, Copy, KeyRound, Shield, Fingerprint, Moon, Globe, Bell, Monitor, CheckCircle, FileText, ExternalLink, Trash2, AlertTriangle } from 'lucide-react'
 import { clearOfflineCache } from '../utils/offlineCache'
 import { PRESENTATION_CODECS, type PresentationCodecId } from '../crypto/presentationCodec'
 import { disablePresentationCrypto, enablePresentationCrypto, getPresentationSettings, isPresentationUnlocked, lockPresentationCrypto, unlockPresentationCrypto, updatePresentationSettings } from '../crypto/presentationCrypto'
 
-type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'proxy' | 'message-privacy'
-const APP_VERSION = '3.1.0'
+type SubView = null | 'password' | 'avatar' | '2fa' | 'sessions' | 'language' | 'fingerprint' | 'myqr' | 'message-privacy'
+const APP_VERSION = '3.1.1'
 
 export default function Profile() {
   const { t } = useI18n()
@@ -28,7 +28,7 @@ export default function Profile() {
   const lang = useStore(s => s.lang) as LangCode
   const setLang = useStore(s => s.setLang)
 
-  const validSections: Exclude<SubView, null>[] = ['password', 'avatar', '2fa', 'sessions', 'language', 'fingerprint', 'myqr', 'proxy', 'message-privacy']
+  const validSections: Exclude<SubView, null>[] = ['password', 'avatar', '2fa', 'sessions', 'language', 'fingerprint', 'myqr', 'message-privacy']
   const subView: SubView = section && validSections.includes(section as Exclude<SubView, null>)
     ? section as Exclude<SubView, null>
     : null
@@ -124,7 +124,6 @@ export default function Profile() {
   if (subView === 'language') return <LanguagePicker onBack={closeSubView} t={t} lang={lang} setLang={setLang} />
   if (subView === 'fingerprint') return <KeyFingerprint onBack={closeSubView} t={t} user={user} />
   if (subView === 'myqr') return <MyQRCode onBack={closeSubView} t={t} user={user} />
-  if (subView === 'proxy') return <ProxySettings onBack={closeSubView} t={t} />
   if (subView === 'message-privacy') return <MessagePrivacySettings onBack={closeSubView} t={t} />
 
   return (
@@ -192,12 +191,6 @@ export default function Profile() {
 
         <div className="divider" />
 
-        {/* Network */}
-        <div className="section-title">{t('profile.network')}</div>
-        <div className="settings-item" onClick={() => openSubView('proxy')}>
-          <span className="label"><Wifi size={16} /> {t('proxy.title')}</span>
-          <span className="arrow"><ChevronRight size={14} /></span>
-        </div>
         <div className="settings-item" onClick={handleClearCache} style={{ opacity: clearingCache ? 0.55 : 1 }}>
           <span className="label"><Trash2 size={16} /> {t('profile.clear_cache')}</span>
           <span className="value">{clearingCache ? t('common.loading') : ''}</span>
@@ -992,375 +985,6 @@ function MyQRCode({ onBack, t, user }: { onBack: () => void; t: (k: string) => s
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', maxWidth: 280 }}>
           {t('profile.qr_scan_hint')}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   SUB-VIEW: Proxy Settings (multi-proxy list with latency display)
-   ═══════════════════════════════════════════════════════════════════════════ */
-function ProxySettings({ onBack, t }: { onBack: () => void; t: (k: string) => string }) {
-  const proxyList = useStore(s => s.proxyList)
-  const activeProxyId = useStore(s => s.activeProxyId)
-  const addProxy = useStore(s => s.addProxy)
-  const updateProxy = useStore(s => s.updateProxy)
-  const removeProxy = useStore(s => s.removeProxy)
-  const setActiveProxy = useStore(s => s.setActiveProxy)
-  const serverUrl = useStore(s => s.serverUrl)
-
-  const [editingProxy, setEditingProxy] = useState<ProxyConfig | null>(null)
-  const [isAdding, setIsAdding] = useState(false)
-  const [latency, setLatency] = useState<Record<string, number | 'testing'>>({})
-
-  // Form state
-  const [formName, setFormName] = useState('')
-  const [formType, setFormType] = useState<'socks5' | 'http' | 'https'>('http')
-  const [formHost, setFormHost] = useState('')
-  const [formPort, setFormPort] = useState('')
-  const [formUser, setFormUser] = useState('')
-  const [formPass, setFormPass] = useState('')
-
-  const resetForm = () => {
-    setFormName(''); setFormType('http'); setFormHost(''); setFormPort('')
-    setFormUser(''); setFormPass('')
-  }
-
-  const openAddForm = () => {
-    resetForm()
-    setEditingProxy(null)
-    setIsAdding(true)
-  }
-
-  const openEditForm = (p: ProxyConfig) => {
-    setFormName(p.name); setFormType(p.type); setFormHost(p.host); setFormPort(p.port)
-    setFormUser(p.username); setFormPass(p.password)
-    setEditingProxy(p)
-    setIsAdding(true)
-  }
-
-  const handleSave = () => {
-    if (!formHost || !formPort) return
-    const name = formName || `${formType.toUpperCase()} ${formHost}:${formPort}`
-    if (editingProxy) {
-      updateProxy({ ...editingProxy, name, type: formType, host: formHost, port: formPort, username: formUser, password: formPass })
-    } else {
-      addProxy({ id: Date.now().toString(), name, type: formType, host: formHost, port: formPort, username: formUser, password: formPass })
-    }
-    setIsAdding(false)
-    setEditingProxy(null)
-    resetForm()
-  }
-
-  const handleActivate = async (id: string) => {
-    if (activeProxyId === id) {
-      // Deactivate
-      setActiveProxy(null)
-      setLatency(prev => { const n = { ...prev }; delete n[id]; return n })
-    } else {
-      // Activate and test latency
-      setActiveProxy(id)
-      setLatency(prev => ({ ...prev, [id]: 'testing' }))
-      // Small delay to let native proxy apply
-      await new Promise(r => setTimeout(r, 300))
-      const { testProxyLatency } = await import('../api/proxy-bridge')
-      const ms = await testProxyLatency(serverUrl)
-      setLatency(prev => ({ ...prev, [id]: ms }))
-    }
-  }
-
-  const handleTestLatency = async (id: string) => {
-    setLatency(prev => ({ ...prev, [id]: 'testing' }))
-    const { testProxyLatency } = await import('../api/proxy-bridge')
-    const ms = await testProxyLatency(serverUrl)
-    setLatency(prev => ({ ...prev, [id]: ms }))
-  }
-
-  const typeOptions: Array<{ value: 'socks5' | 'http' | 'https'; label: string }> = [
-    { value: 'http', label: 'HTTP' },
-    { value: 'https', label: 'HTTPS' },
-    { value: 'socks5', label: 'SOCKS5' },
-  ]
-
-  return (
-    <div className="page" id="proxy-settings-page">
-      <div className="page-header">
-        <button className="back-btn" onClick={onBack}><ChevronLeft size={20} /></button>
-        <h1>{t('proxy.title')}</h1>
-      </div>
-      <div className="page-body" style={{ padding: 16 }}>
-
-        <div style={{
-          display: 'flex', alignItems: 'flex-start', gap: 10,
-          padding: '12px 14px', marginBottom: 12, borderRadius: 12,
-          background: 'rgba(245,158,11,0.10)',
-          border: '1px solid rgba(245,158,11,0.28)',
-          color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5,
-        }}>
-          <AlertTriangle size={18} style={{ color: '#f59e0b', flexShrink: 0, marginTop: 1 }} />
-          <span>{t('proxy.tor_required_notice')}</span>
-        </div>
-
-        {/* "Direct" option */}
-        <div
-          onClick={() => setActiveProxy(null)}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '14px 16px', borderRadius: 14,
-            background: !activeProxyId
-              ? 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.12))'
-              : 'var(--bg-card)',
-            border: !activeProxyId
-              ? '1.5px solid rgba(34,197,94,0.35)'
-              : '1px solid var(--border)',
-            cursor: 'pointer',
-            transition: 'all 0.25s ease',
-            marginBottom: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: !activeProxyId ? 'rgba(34,197,94,0.2)' : 'var(--bg-secondary)',
-              color: !activeProxyId ? '#22c55e' : 'var(--text-muted)',
-              fontSize: 18,
-            }}>⚡</div>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>{t('proxy.direct')}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('proxy.direct_desc')}</div>
-            </div>
-          </div>
-          {!activeProxyId && <Check size={18} style={{ color: '#22c55e' }} />}
-        </div>
-
-        {/* Proxy list */}
-        {proxyList.map(p => {
-          const isActive = activeProxyId === p.id
-          const lat = latency[p.id]
-          return (
-            <div
-              key={p.id}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '12px 14px', borderRadius: 14, marginBottom: 8,
-                background: isActive
-                  ? 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12))'
-                  : 'var(--bg-card)',
-                border: isActive
-                  ? '1.5px solid rgba(99,102,241,0.35)'
-                  : '1px solid var(--border)',
-                cursor: 'pointer',
-                transition: 'all 0.25s ease',
-              }}
-            >
-              {/* Tap area to activate */}
-              <div
-                onClick={() => handleActivate(p.id)}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}
-              >
-                {/* Icon */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: isActive ? 'rgba(99,102,241,0.2)' : 'var(--bg-secondary)',
-                  color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                }}>
-                  <Wifi size={16} />
-                </div>
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {p.name}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {p.type.toUpperCase()} · {p.host}:{p.port}
-                    {p.username ? ' · 🔑' : ''}
-                  </div>
-                </div>
-              </div>
-
-              {/* Latency badge (only for active) */}
-              {isActive && (
-                <div
-                  onClick={(e) => { e.stopPropagation(); handleTestLatency(p.id) }}
-                  style={{
-                    padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                    background: lat === 'testing'
-                      ? 'rgba(250,204,21,0.15)'
-                      : lat === -1
-                        ? 'rgba(239,68,68,0.15)'
-                        : typeof lat === 'number'
-                          ? lat < 200 ? 'rgba(34,197,94,0.15)' : lat < 500 ? 'rgba(250,204,21,0.15)' : 'rgba(239,68,68,0.15)'
-                          : 'rgba(99,102,241,0.15)',
-                    color: lat === 'testing'
-                      ? '#eab308'
-                      : lat === -1
-                        ? '#ef4444'
-                        : typeof lat === 'number'
-                          ? lat < 200 ? '#22c55e' : lat < 500 ? '#eab308' : '#ef4444'
-                          : 'var(--accent)',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {lat === 'testing'
-                    ? t('proxy.testing')
-                    : lat === -1
-                      ? t('proxy.timeout')
-                      : typeof lat === 'number'
-                        ? `${lat}ms`
-                        : t('proxy.test')}
-                </div>
-              )}
-
-              {/* Edit / Delete buttons */}
-              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                <button
-                  className="btn btn-sm"
-                  onClick={(e) => { e.stopPropagation(); openEditForm(p) }}
-                  style={{ padding: '6px 8px', borderRadius: 8, minWidth: 0 }}
-                  title={t('common.edit')}
-                >✏️</button>
-                <button
-                  className="btn btn-sm"
-                  onClick={(e) => { e.stopPropagation(); removeProxy(p.id) }}
-                  style={{ padding: '6px 8px', borderRadius: 8, minWidth: 0 }}
-                  title={t('common.delete')}
-                >🗑️</button>
-              </div>
-            </div>
-          )
-        })}
-
-        {/* Add button */}
-        {proxyList.length < 5 && !isAdding && (
-          <button
-            className="btn btn-full"
-            onClick={openAddForm}
-            style={{
-              marginTop: 4, marginBottom: 16, borderRadius: 14, padding: '14px 0',
-              border: '2px dashed var(--border)', background: 'transparent',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              color: 'var(--text-muted)', fontSize: 14, fontWeight: 500,
-            }}
-          >
-            <span style={{ fontSize: 18 }}>+</span> {t('proxy.add')}
-          </button>
-        )}
-
-        {proxyList.length >= 5 && !isAdding && (
-          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', padding: '8px 0 16px', opacity: 0.7 }}>
-            {t('proxy.max_reached')}
-          </div>
-        )}
-
-        {/* Add / Edit form */}
-        {isAdding && (
-          <div style={{
-            background: 'var(--bg-card)', borderRadius: 16, padding: 16,
-            border: '1px solid var(--border)', marginTop: 4, marginBottom: 16,
-            display: 'flex', flexDirection: 'column', gap: 12,
-            animation: 'slideDown 0.25s ease',
-          }}>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
-              {editingProxy ? t('common.edit') : t('proxy.add')}
-            </div>
-
-            {/* Name */}
-            <div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{t('proxy.name')}</div>
-              <input
-                className="input" type="text"
-                placeholder={t('proxy.name_placeholder')}
-                value={formName} onChange={e => setFormName(e.target.value)}
-              />
-            </div>
-
-            {/* Type selector */}
-            <div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{t('proxy.type')}</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {typeOptions.map(opt => (
-                  <button
-                    key={opt.value}
-                    className={`btn btn-sm ${formType === opt.value ? 'btn-primary' : ''}`}
-                    onClick={() => setFormType(opt.value)}
-                    style={{ flex: 1, borderRadius: 10, fontSize: 13, fontWeight: formType === opt.value ? 700 : 400, padding: '10px 0' }}
-                  >{opt.label}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Host + Port */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ flex: 3 }}>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{t('proxy.host')}</div>
-                <input
-                  className="input" type="text" placeholder="proxy.example.com"
-                  value={formHost} onChange={e => setFormHost(e.target.value)}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{t('proxy.port')}</div>
-                <input
-                  className="input" type="text" inputMode="numeric" placeholder="1080"
-                  value={formPort} onChange={e => setFormPort(e.target.value.replace(/\D/g, ''))}
-                  style={{ width: '100%' }}
-                />
-              </div>
-            </div>
-
-            {/* Auth */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{t('proxy.username')}</div>
-                <input
-                  className="input" type="text" autoComplete="off"
-                  placeholder={t('proxy.optional')}
-                  value={formUser} onChange={e => setFormUser(e.target.value)}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{t('proxy.password')}</div>
-                <input
-                  className="input" type="password" autoComplete="off"
-                  placeholder={t('proxy.optional')}
-                  value={formPass} onChange={e => setFormPass(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Form buttons */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <button
-                className="btn btn-primary btn-full"
-                onClick={handleSave}
-                disabled={!formHost || !formPort}
-                style={{ flex: 2, borderRadius: 10 }}
-              >{t('common.save')}</button>
-              <button
-                className="btn btn-full"
-                onClick={() => { setIsAdding(false); setEditingProxy(null); resetForm() }}
-                style={{ flex: 1, borderRadius: 10 }}
-              >{t('common.cancel')}</button>
-            </div>
-          </div>
-        )}
-
-        {/* Hint */}
-        <div style={{
-          padding: '12px 14px',
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08))',
-          border: '1px solid rgba(99,102,241,0.15)',
-          borderRadius: 12,
-          fontSize: 13,
-          color: 'var(--text-muted)',
-          lineHeight: 1.6,
-        }}>
-          {t('proxy.hint')}
         </div>
       </div>
     </div>

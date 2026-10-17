@@ -31,15 +31,15 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 ```
 
-Current release: `3.1.0` (`versionCode 30100`)
+Current release: `3.1.1` (`versionCode 30101`)
 
-Source ref: `v3.1.0` (the immutable release tag must resolve to the reviewed commit)
+Source ref: `v3.1.1` (the immutable release tag must resolve to the reviewed commit)
 
-Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.0
+Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.1
 
 Version-update MR: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845
 
-Source commit: `c79f5a819afeb76dc03030da6bedf9536f2615bb`. The recipe retains only 3.1.0 (30100).
+Source commit: resolve the immutable `v3.1.1` tag. The recipe retains only 3.1.1 (30101).
 
 Local build, regression tests, lint and APK signature checks passed; native-device runtime testing is pending. Independent F-Droid reproduction status is recorded in MR CI.
 
@@ -69,6 +69,6 @@ Description:
 > A compatible self-hosted server is required. The app does not include Google
 > Play services, Firebase, advertising, or analytics.
 
-Version 3.1.0 requires compatible clients and server, with member identity
+Version 3.1.1 requires compatible clients and server, with member identity
 verification before group sending. See [release guidance](README.md) and the
-[client security boundaries](../README_EN.md#310-upgrade-and-security-boundaries).
+[client security boundaries](../README_EN.md#311-upgrade-and-security-boundaries).

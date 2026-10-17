@@ -5,7 +5,7 @@
 > [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite) 的 Android 客户端，使用 Capacitor 8 打包上游 React/TypeScript 前端，并内嵌 Tor。
 
 [![Upstream](https://img.shields.io/badge/上游-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/版本-3.1.0-orange)](package.json)
+[![Version](https://img.shields.io/badge/版本-3.1.1-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## 项目范围
@@ -41,10 +41,10 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 ## 本地数据与密钥
 
 - 身份密钥、Sender Key 和身份信任记录使用按账号隔离的浏览器秘密存储，以不可导出的 WebCrypto AES-GCM 密钥加密后存入 IndexedDB；这不等同于 Android Keystore。会话、设置、消息缓存与离线数据使用 localStorage。
-- 消息缓存持久化前会移除已解密的明文字段，但当前 3.1.0 前端没有把整个聊天缓存交给 Android Keystore 加密。
+- 消息缓存持久化前会移除已解密的明文字段，但当前 3.1.1 前端没有把整个聊天缓存交给 Android Keystore 加密。
 - Android 系统备份已关闭，并明确排除云备份及设备迁移中的应用数据（包括 WebView 身份密钥和消息缓存）。
 - 启用“文本外观加密”后，应用启动会要求输入额外密码；错误或取消解锁时只显示文本外观密文。该功能不会替代设备锁或 Android Keystore。
-- 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.1.0 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
+- 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.1.1 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
 - 清理应用数据或卸载应用可能永久删除本地密钥及无法恢复的历史消息。
 
 ## Android 标识
@@ -53,8 +53,8 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 |---|---|
 | 应用名称 | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| 版本 | `3.1.0` |
-| Version Code | `30100` |
+| 版本 | `3.1.1` |
+| Version Code | `30101` |
 | 最低 Android API | 24 |
 
 ## 构建
@@ -89,22 +89,22 @@ cd ..
 未签名产物为 `android/app/build/outputs/apk/release/app-release-unsigned.apk`。在本机私有环境中配置 `ANDROID_SDK_ROOT`、`KEYSTORE_PASSWORD` 和 `KEY_PASSWORD` 后执行：
 
 ```bash
-scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.0/app-release.apk
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.1/app-release.apk
 ```
 
 默认密钥库路径为 `paperphone-release.keystore`，可通过 `PPL_RELEASE_KEYSTORE` 指向外部私有文件。不要提交密钥库或密码。脚本使用 Build Tools 35.0.0，保留 ZIP 对齐并验证 v2/v3 签名。Release 仅支持 `arm64-v8a`，暂停 R8 与资源裁剪。
 
 ## 当前发布与 F-Droid
 
-- [3.1.0 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.0)：包含签名 APK 和 `SHA256SUMS`。
-- 固定源码标签 `v3.1.0` 对应提交 `c79f5a819afeb76dc03030da6bedf9536f2615bb`；上游客户端基线为 `9bf6aaf`。
-- 初次收录 [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) 已合并；3.1.0 更新见 [MR !52845](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845)。元数据只保留 3.1.0（30100）。
+- [3.1.1 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.1)：包含签名 APK 和 `SHA256SUMS`。
+- 固定源码标签为 `v3.1.1`；上游客户端基线为 `9bf6aaf`。
+- 初次收录 [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) 已合并；3.1.1 更新见 [MR !52845](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845)。元数据只保留 3.1.1（30101）。
 - 本地前端构建、安全与翻译回归、Android Release 构建、lint、签名校验及签名复制一致性检查已通过。本版真机运行验证尚未完成；F-Droid 独立构建状态以 MR 的 CI 为准。
 - F-Droid 元数据启用了 `Binaries` 和允许的签名证书，用于验证可复现构建。跨渠道覆盖安装取决于最终 APK 证书是否相同，请先核对签名；本项目不发布到 Google Play。
 
 提交、签名与验证流程见 [`fdroid/README.md`](fdroid/README.md)，构建元数据见 [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml)。
 
-## 3.1.0 升级与安全边界
+## 3.1.1 升级与安全边界
 
 双方客户端和服务端需配套升级。双方通过线下交流的文本外观密码完成身份握手；绿色身份标识需要有效证明及对方对本次挑战的回执，签名本身不证明陌生公钥属于目标联系人。身份密钥变化会撤销信任，需重新验证。
 

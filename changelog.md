@@ -4,6 +4,15 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.1.1 — 2026-10-17
+
+- 移除个人信息页已无用的代理选项、设置子页面及相关代码；旧 `/profile/proxy` 路由返回个人信息页。
+- 保留清理缓存功能和内置 Tor 网络管理，版本更新为 `3.1.1`（`30101`）。
+- GitHub 发布与 F-Droid 更新元数据使用新固定标签 `v3.1.1`，构建配置只保留最新版。
+
+- Removed obsolete Profile proxy settings and the associated screen; old proxy URLs redirect to Profile.
+- Preserved cache clearing and embedded Tor. Updated release and F-Droid metadata to 3.1.1 (30101).
+
 ## 3.1.0 — 2026-10-17
 
 - 合入上游 `9bf6aaf` 的客户端更新：认证消息签名、群成员及发送密钥签名验证、身份验证标识与八种语言安全提示。

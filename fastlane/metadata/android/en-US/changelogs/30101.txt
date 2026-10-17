@@ -1,0 +1,1 @@
+Removed obsolete proxy settings from Profile, including the settings screen and route. Old proxy URLs redirect to Profile. Networking remains managed by embedded Tor.

@@ -12,7 +12,7 @@ cd android
 ./gradlew assembleRelease lintRelease
 ```
 
-The three security suites cover authenticated messaging, signed groups and synchronization. The localization suite checks 92 security keys across eight languages. These commands passed for the 3.1.0 release. Native-device runtime acceptance is still pending.
+The three security suites cover authenticated messaging, signed groups and synchronization. The localization suite checks 92 security keys across eight languages. These commands passed for the 3.1.1 release. Native-device runtime acceptance is still pending.
 
 ## Cryptographic and synchronization coverage
 
@@ -128,6 +128,6 @@ of protocol constants and user-supplied text.
 
 Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Open the group member list to check refreshed trust, then exercise leave/kick, offline reconnect and pending-key recovery. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
 
-Android 3.1.0 (30100) is published at [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.0), with immutable source commit `c79f5a819afeb76dc03030da6bedf9536f2615bb`. Automated client tests do not replace native-device acceptance or validate upstream Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
+Android 3.1.1 (30101) is published at [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.1), using immutable source tag `v3.1.1`. Automated client tests do not replace native-device acceptance or validate upstream Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
 
 See the [main README](../README_EN.md), [中文说明](../README.md), and [F-Droid release guide](../fdroid/README.md). Deployment and server migration guidance is maintained in the [upstream repository](https://github.com/619dev/PaperPhoneLite). The client suites provide regression coverage with real cryptography and mocked transport/persistence; they are not an independent audit or native-device UI test.
