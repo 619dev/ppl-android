@@ -13,9 +13,9 @@ Repo: https://github.com/619dev/ppl-android.git
 Binaries: https://github.com/619dev/ppl-android/releases/download/v%v/app-release.apk
 
 Builds:
-  - versionName: 3.0.24
-    versionCode: 30024
-    commit: v3.0.24
+  - versionName: 3.1.0
+    versionCode: 30100
+    commit: v3.1.0
     subdir: android/app
     sudo:
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
@@ -38,5 +38,5 @@ AllowedAPKSigningKeys: 39c14b942f92520723292a32759f5644638e4123ece96ed8fce517754
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 3.0.24
-CurrentVersionCode: 30024
+CurrentVersion: 3.1.0
+CurrentVersionCode: 30100

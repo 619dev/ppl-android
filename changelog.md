@@ -4,6 +4,17 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.1.0 — 2026-10-17
+
+- 合入上游 `9bf6aaf` 的客户端更新：认证消息签名、群成员及发送密钥签名验证、身份验证标识与八种语言安全提示。
+- 修复离线同步分页、缓存落盘后推进游标、切换账号隔离及群历史消息分页。
+- 保留 Android 内置 Tor、原生附件存储、三星导航与安全区域适配。
+- 同步上游安全与翻译回归测试，Android 版本更新为 `3.1.0`（`30100`）。
+
+- Integrated upstream `9bf6aaf`: authenticated messaging, signed group membership and sender keys, identity badges and security text in eight languages.
+- Fixed paginated catch-up, durable cache before cursor advancement, account isolation and group history pagination.
+- Preserved Android embedded Tor, native attachment storage, Samsung navigation and safe-area adaptations.
+
 ## 3.0.24 — 2026-10-04
 
 - 移除不需要的 Guardian Maven 仓库及对应 F-Droid scanignore。

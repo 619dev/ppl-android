@@ -1,0 +1,1 @@
+Updated to upstream 3.1.0: authenticated messaging, signed group keys, identity verification and security translations. Fixed offline synchronization and group history pagination. Preserved Android Tor and navigation support.

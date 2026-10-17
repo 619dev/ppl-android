@@ -17,8 +17,8 @@ This directory is staging material. The final metadata file belongs in the
 4. Confirm that generated directories and secrets are absent with
    `git status --ignored` and GitHub's web UI. Never commit `node_modules`,
    `dist`, Android build output, `local.properties`, or a keystore.
-5. Tag the exact reviewed commit: `git tag -s v3.0.24 -m "PaperPhoneLite 3.0.24"`
-   and then push that tag. If `v3.0.24` already exists, do not move it: release a
+5. Tag the exact reviewed commit: `git tag -s v3.1.0 -m "PaperPhoneLite 3.1.0"`
+   and then push that tag. If `v3.1.0` already exists, do not move it: release a
    new version/code and tag instead.
 
 ## 2. Verify the source build
@@ -52,17 +52,17 @@ fictional demo identities and content are acceptable.
 
 ## 4. Current submission status
 
-The initial submission is already open. Update these existing items rather than
-creating duplicates:
+The initial submission `fdroid/fdroiddata!46295` was merged. Future releases
+must use a new update merge request based on current `fdroid/fdroiddata:master`;
+do not modify the merged submission or open a duplicate RFP.
 
-- RFP: `fdroid/rfp#4291`
-- fdroiddata merge request: `fdroid/fdroiddata!46295`
+- Original RFP: `fdroid/rfp#4291`
+- Merged initial submission: `fdroid/fdroiddata!46295`
 
-The merge-request branch must contain only the latest PaperPhoneLite build
-entry. The current candidate is `3.0.24` (`versionCode 30024`) at the immutable
-`v3.0.24` tag declared by the metadata. Create this new tag only after the fixes are committed and verified. Its signed GitHub build must pass
-installation and runtime testing before submission; F-Droid will independently
-reproduce and sign the unsigned build.
+The update branch must contain only the latest PaperPhoneLite build entry.
+The current version is `3.1.0` (`versionCode 30100`), using the immutable
+`v3.1.0` source tag. Publish the signed GitHub release before submitting the
+metadata update. F-Droid independently validates reproducibility and signing.
 
 ## 5. Submission routes
 
@@ -88,8 +88,7 @@ the app is accepted.
 1. Update `fdroid/rfp#4291`; do not open a duplicate RFP.
 2. Keep its application ID and repository information aligned with
    `fdroid/RFP.md`.
-3. Link the current fdroiddata merge request and source release, and notify the
-   maintainers when a tested replacement build is pushed.
+3. Link the current fdroiddata merge request and source release, when relevant to the original request.
 4. Address any reported licensing, dependency, tracker, build, or metadata
    problems in the existing merge request.
 
@@ -99,7 +98,7 @@ the app is accepted.
 2. Rebase it on current `fdroid/fdroiddata:master` when required by maintainers.
 3. Copy `fdroid/com.fm619.paperphonelite.yml` to
    `metadata/com.fm619.paperphonelite.yml` in that clone.
-4. Verify that public tag `v3.0.24` resolves to the same immutable commit
+4. Verify that public tag `v3.1.0` resolves to the same immutable commit
    recorded by the release and metadata review.
 5. Run the official checks in the F-Droid buildserver container:
 
@@ -114,8 +113,8 @@ fdroid build com.fm619.paperphonelite
 6. Fix every error. Review any scanner exception: the included `scanignore`
    is limited to Capacitor's source template archive and must not be broadened
    merely to silence findings.
-7. Commit only the metadata file, push the existing branch, and update
-   `fdroid/fdroiddata!46295`. Monitor its CI and reviewer comments.
+7. Commit only the metadata file, push the existing branch, and open a version-update merge request against
+   `fdroid/fdroiddata:master`. Monitor its CI and reviewer comments.
 
 ## 8. Future releases
 
@@ -133,7 +132,7 @@ signing is separately configured and accepted.
 When signing an unsigned Gradle APK for GitHub, use:
 
 ```sh
-scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.0.24/app-release.apk
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.0/app-release.apk
 ```
 
 Set `ANDROID_SDK_ROOT`, `KEYSTORE_PASSWORD` and `KEY_PASSWORD` in the local

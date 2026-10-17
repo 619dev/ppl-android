@@ -33,11 +33,11 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 ```
 
-Current release: `3.0.24` (`versionCode 30024`)
+Current release: `3.1.0` (`versionCode 30100`)
 
-Source ref: `v3.0.24` (the immutable release tag must resolve to the reviewed commit)
+Source ref: `v3.1.0` (the immutable release tag must resolve to the reviewed commit)
 
-Release: https://github.com/619dev/ppl-android/releases/tag/v3.0.24
+Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.0
 
 fdroiddata MR: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295
 
