@@ -11,7 +11,7 @@ This directory is staging material. The final metadata file belongs in the
 2. Commit source, lockfile, Fastlane descriptions and version metadata. Exclude
    `node_modules`, `dist`, Android build outputs, `local.properties` and keystores.
 3. Build and validate the exact source revision before creating a release tag.
-   The release source tag is `v3.1.1`; never move a published tag. Future releases
+   The release source tag is `v3.1.5`; never move a published tag. Future releases
    require a new version/code and tag. Later documentation commits do not change
    the source used by this released APK.
 
@@ -33,9 +33,8 @@ With no keystore/password variables, the expected result is
 `android/app/build/outputs/apk/release/app-release-unsigned.apk`. Inspect it
 with `apkanalyzer manifest print ...` and test a separately signed copy on an
 arm64-v8a emulator or device. The release intentionally contains only
-`arm64-v8a` native libraries; R8 and resource shrinking are disabled because
-the 3.0.19 configuration caused a runtime startup crash. Also run
-`./gradlew lintRelease`.
+`arm64-v8a` native libraries. R8 minification is enabled with keep rules for
+Capacitor and native Tor/transport entry points. Resource shrinking stays disabled.
 
 ## 3. Add store listing assets
 
@@ -48,20 +47,16 @@ fictional demo identities and content are acceptable.
 
 ## 4. Current release and submission
 
-As of 2026-10-17:
+For 3.1.5 (2026-11-13):
 
-- [GitHub 3.1.1 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.1)
+- [GitHub 3.1.5 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.5)
   contains the signed `app-release.apk` and `SHA256SUMS`.
 - Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295)
   was merged; the original RFP is `fdroid/rfp#4291`.
-- Version update [MR !52845](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845)
-  uses `619dev/fdroiddata:codex/paperphonelite-3.1.0`, based on upstream master.
-  Its sole changed file is `metadata/com.fm619.paperphonelite.yml`, retaining
-  only 3.1.1 (`versionCode 30101`) with source tag `v3.1.1`.
-- Local client build, security/localization tests, Android Release build, lint,
-  APK signing and signature-copy equality checks passed. Native-device runtime
-  acceptance is pending. Consult MR CI for independent F-Droid reproduction;
-  the local signature-copy check alone does not establish that reproduction.
+- The version-update recipe retains only 3.1.5 (`versionCode 30105`) with
+  source tag `v3.1.5`.
+- Consult MR CI for independent F-Droid reproduction; the local
+  signature-copy check alone does not establish that reproduction.
 
 Release APK SHA-256:
 
@@ -91,12 +86,11 @@ Do not reopen a duplicate RFP for a version update.
 
 ## 7. Update fdroiddata
 
-1. Use fork `619dev/fdroiddata`; the 3.1.1 branch is
-   `codex/paperphonelite-3.1.0`.
+1. Use fork `619dev/fdroiddata` and branch `codex/paperphonelite-3.1.5`.
 2. Start each new update branch from current `fdroid/fdroiddata:master`.
 3. Copy `fdroid/com.fm619.paperphonelite.yml` to
    `metadata/com.fm619.paperphonelite.yml` in that clone.
-4. Verify that public tag `v3.1.1` resolves to the same immutable commit
+4. Verify that public tag `v3.1.5` resolves to the same immutable commit
    recorded by the release and metadata review.
 5. Run the official checks in the F-Droid buildserver container:
 
@@ -112,7 +106,7 @@ fdroid build com.fm619.paperphonelite
    is limited to Capacitor's source template archive and must not be broadened
    merely to silence findings.
 7. Commit only the metadata file, push the update branch, and use the matching update MR
-   against `fdroid/fdroiddata:master` (3.1.1: !52845). Monitor CI and reviewer comments.
+   against `fdroid/fdroiddata:master`. Monitor CI and reviewer comments.
 
 ## 8. Future releases
 
@@ -130,7 +124,7 @@ on the final distributed APKs; verify them rather than assuming compatibility.
 When signing an unsigned Gradle APK for GitHub, use:
 
 ```sh
-scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.1/app-release.apk
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.5/app-release.apk
 ```
 
 Set `ANDROID_SDK_ROOT`, `KEYSTORE_PASSWORD` and `KEY_PASSWORD` in the local
@@ -147,9 +141,9 @@ file and the original unsigned APK match.
 To check signing layout locally, run from this repository's root:
 
 ```sh
-apksigcopier copy release/3.1.1/app-release.apk android/app/build/outputs/apk/release/app-release-unsigned.apk /tmp/ppl-signature-copy.apk
+apksigcopier copy release/3.1.5/app-release.apk android/app/build/outputs/apk/release/app-release-unsigned.apk /tmp/ppl-signature-copy.apk
 "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose /tmp/ppl-signature-copy.apk
-cmp release/3.1.1/app-release.apk /tmp/ppl-signature-copy.apk
+cmp release/3.1.5/app-release.apk /tmp/ppl-signature-copy.apk
 ```
 
 Repeat with the independent F-Droid unsigned artifact when available. Do not

@@ -5,7 +5,7 @@
 > Android client for [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite), packaging the upstream React/TypeScript frontend with Capacitor 8 and a bundled Tor client.
 
 [![Upstream](https://img.shields.io/badge/Upstream-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/Version-3.1.1-orange)](package.json)
+[![Version](https://img.shields.io/badge/Version-3.1.5-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## Scope
@@ -26,7 +26,7 @@ PaperPhoneLite 3.x does **not** provide Moments, a public Timeline, direct or gr
 
 ## Tor and Network Boundary
 
-- Release APKs bundle Guardian Project `tor-android 0.4.8.17.2` for 64-bit ARM devices only (`arm64-v8a`). Current release builds disable R8 code minification and Android resource shrinking to prevent runtime crashes in reflection/JNI dependencies. Debug builds remain available for local development testing.
+- Release APKs bundle Guardian Project `tor-android 0.4.8.17.2` for 64-bit ARM devices only (`arm64-v8a`). Release builds enable R8 code minification, with keep rules for reflective and JNI entry points. Resource shrinking stays disabled. Debug builds remain available for local development testing.
 - The native Tor service exposes SOCKS5 on `127.0.0.1:9050`; the Android WebView proxy switches to it only after Tor reaches 100% bootstrap, preventing login requests while the circuit is not yet usable.
 - If direct Tor cannot establish a circuit within 20 seconds, the client fetches a current WebTunnel bridge from Tor Project's official circumvention-settings endpoint and restarts Tor through bundled IPtProxy/Lyrebird. Bridges are normalized with `utls=none`, and the last successfully fetched bridge is retained as a temporary fallback.
 - Before a WebTunnel restart, the client removes only rebuildable Tor directory-consensus caches so stale consensus data cannot leave bootstrap stalled; account, message, and key data are not cleared.
@@ -41,10 +41,10 @@ ntfy is the only supported, optional Android background-notification path. When 
 ## Local Data and Keys
 
 - Identity keys, Sender Keys and identity trust records use account-scoped browser secret storage, encrypted in IndexedDB with a non-exportable WebCrypto AES-GCM key. This is not Android Keystore. Sessions, settings, message caches and offline data use localStorage.
-- Decrypted message fields are removed before message-cache persistence, but the current 3.1.1 frontend does not encrypt the entire chat cache with Android Keystore.
+- Decrypted message fields are removed before message-cache persistence, but the current 3.1.5 frontend does not encrypt the entire chat cache with Android Keystore.
 - Android system backup is disabled, and app data (including WebView identity keys and message caches) is excluded from cloud backup and device transfer.
 - When text-appearance encryption is enabled, startup asks for the extra password; cancelling or entering an incorrect password leaves only the styled ciphertext visible. This does not replace a device lock or Android Keystore.
-- Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.1.1 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
+- Native `SecureStoragePlugin` and `KeepAwakePlugin` compatibility code remains, but the synchronized 3.1.5 frontend does not call it. It must not be described as active system-backed protection for current keys or caches.
 - Clearing app data or uninstalling the app can permanently remove local keys and unrecoverable history.
 
 ## Android Identity
@@ -53,8 +53,8 @@ ntfy is the only supported, optional Android background-notification path. When 
 |---|---|
 | App name | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| Version | `3.1.1` |
-| Version code | `30101` |
+| Version | `3.1.5` |
+| Version code | `30105` |
 | Minimum Android API | 24 |
 
 ## Build
@@ -89,26 +89,26 @@ cd ..
 The unsigned output is `android/app/build/outputs/apk/release/app-release-unsigned.apk`. Set `ANDROID_SDK_ROOT`, `KEYSTORE_PASSWORD`, and `KEY_PASSWORD` in a private local environment, then run:
 
 ```bash
-scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.1/app-release.apk
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.5/app-release.apk
 ```
 
-The default keystore is `paperphone-release.keystore`; `PPL_RELEASE_KEYSTORE` can point to an external private file. Never commit keystores or passwords. The script uses Build Tools 35.0.0, preserves ZIP alignment and verifies v2/v3 signatures. Release builds support `arm64-v8a` only and disable R8 and resource shrinking.
+The default keystore is `paperphone-release.keystore`; `PPL_RELEASE_KEYSTORE` can point to an external private file. Never commit keystores or passwords. The script uses Build Tools 35.0.0, preserves ZIP alignment and verifies v2/v3 signatures. Release builds support `arm64-v8a` only and enable R8 with resource shrinking disabled.
 
 ## Current Release and F-Droid
 
-- [Release 3.1.1](https://github.com/619dev/ppl-android/releases/tag/v3.1.1) includes the signed APK and `SHA256SUMS`.
-- The immutable source tag is `v3.1.1`; the upstream client baseline is `9bf6aaf`.
-- Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) was merged. The 3.1.1 update is [MR !52845](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845). Metadata retains only 3.1.1 (30101).
-- Local frontend build, security/localization regression tests, Android Release build, lint, signature verification and signature-copy equality checks passed. Device runtime testing is pending; consult MR CI for independent F-Droid build status.
+- [Release 3.1.5](https://github.com/619dev/ppl-android/releases/tag/v3.1.5) includes the signed APK and `SHA256SUMS`.
+- The immutable source tag is `v3.1.5`; the upstream client baseline is `2823996`.
+- Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) was merged. The 3.1.5 update uses a separate version-update MR. Metadata retains only 3.1.5 (30105).
+- Consult the version-update MR for independent F-Droid build and signature reproduction results.
 - F-Droid metadata enables `Binaries` and the allowed signing certificate for reproducibility verification. In-place upgrades across channels depend on matching APK certificates; verify the final signatures first. This app is not published on Google Play.
 
 See [`fdroid/README.md`](fdroid/README.md) for publishing and verification, and [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml) for build metadata.
 
-## 3.1.1 Upgrade and Security Boundaries
+## 3.1.5 Upgrade and Security Boundaries
 
-Both clients and the server must be upgraded together. Identity verification uses a text-appearance password exchanged offline. A green identity badge requires a valid peer proof and a receipt for the local challenge; a signature alone does not establish ownership of an unknown key. Identity changes revoke trust and require verification again.
+Upgrade both clients and the server together. The updated server repairs historical one-sided friendships at startup, and Android refreshes contacts after relationship changes. Narrow, short and landscape layouts respect safe areas, and the login page can scroll. Identity verification uses a text-appearance password exchanged offline. A green identity badge requires a valid peer proof and a receipt for the local challenge; a signature alone does not establish ownership of an unknown key. Identity changes revoke trust and require verification again.
 
-Group sends require verified member identities and signed Sender Key distribution. Membership changes advance the key epoch; offline clients recover distributions for historical epochs. Rotation cannot revoke old keys or plaintext already held by a departed member, or recover keys previously lost.
+New group messages use Sender Key encryption and Ed25519 signatures with member public keys published by the server. They do not require pairwise private verification. Text appearance passwords apply to new private messages; older group messages still support decryption with the original password. Membership changes advance the key epoch; offline clients recover distributions for historical epochs. Rotation cannot revoke old keys or plaintext already held by a departed member, or recover keys previously lost.
 
 Legacy unsigned messages are labelled explicitly. Once a contact identity is pinned, unsigned messages, including old history, are rejected. The registration field `kem_pub` currently holds an Ed25519 signing public key; the signed-message path does not use ML-KEM and does not implement working post-quantum key registration. Message signing does not end-to-end encrypt uploaded attachment bytes. Local caches retain at most 2,000 messages per conversation; server auto-delete and attachment retention still apply.
 

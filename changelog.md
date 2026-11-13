@@ -4,6 +4,18 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.1.5 — 2026-11-13
+
+- 改善窄屏、短屏和横屏布局、登录滚动及系统辅助显示设置。
+- 支持在好友资料页添加或移除好友并刷新联系人；历史单向关系由配套服务端在启动时修复。
+- 新群消息统一使用签名 Sender Key，群密钥分发使用服务端发布的成员公钥。文本外观加密只用于新私聊，兼容旧群消息解密。
+- 个人信息页和 Android 版本更新为 `3.1.5`（`30105`）；Release 启用 R8，仅含 `arm64-v8a`。
+
+- Improved narrow, short and landscape layouts, login scrolling and accessibility preferences.
+- Added friendship controls to user profiles and refreshed contacts after changes. The matching server repairs historical one-sided friendships at startup.
+- New group messages use signed Sender Keys with server-published member keys. Text appearance encryption applies to new private messages; legacy group history remains supported.
+- Updated the profile footer and Android version to 3.1.5 (30105). Release enables R8 and ships only arm64-v8a.
+
 ## 3.1.1 — 2026-10-17
 
 - 移除个人信息页已无用的代理选项、设置子页面及相关代码；旧 `/profile/proxy` 路由返回个人信息页。

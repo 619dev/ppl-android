@@ -31,17 +31,17 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 ```
 
-Current release: `3.1.1` (`versionCode 30101`)
+Current release: `3.1.5` (`versionCode 30105`)
 
-Source ref: `v3.1.1` (the immutable release tag must resolve to the reviewed commit)
+Source ref: `v3.1.5` (the immutable release tag must resolve to the reviewed commit)
 
-Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.1
+Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.5
 
-Version-update MR: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52845
+Version-update MR: submit the 3.1.5 recipe against `fdroid/fdroiddata:master`.
 
-Source commit: resolve the immutable `v3.1.1` tag. The recipe retains only 3.1.1 (30101).
+Source commit: resolve the immutable `v3.1.5` tag. The recipe retains only 3.1.5 (30105).
 
-Local build, regression tests, lint and APK signature checks passed; native-device runtime testing is pending. Independent F-Droid reproduction status is recorded in MR CI.
+Independent F-Droid reproduction status is recorded in the version-update MR CI.
 
 Why do you want this app added to F-Droid:
 
@@ -69,6 +69,7 @@ Description:
 > A compatible self-hosted server is required. The app does not include Google
 > Play services, Firebase, advertising, or analytics.
 
-Version 3.1.1 requires compatible clients and server, with member identity
-verification before group sending. See [release guidance](README.md) and the
-[client security boundaries](../README_EN.md#311-upgrade-and-security-boundaries).
+Version 3.1.5 requires compatible clients and server, with signed Sender Key group messaging using server-published member keys.
+Private password verification remains independent of group sending. The matching
+server repairs historical one-sided friendships at startup. See [release guidance](README.md) and the
+[client security boundaries](../README_EN.md#315-upgrade-and-security-boundaries).

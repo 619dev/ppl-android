@@ -12,7 +12,7 @@ cd android
 ./gradlew assembleRelease lintRelease
 ```
 
-The three security suites cover authenticated messaging, signed groups and synchronization. The localization suite checks 92 security keys across eight languages. These commands passed for the 3.1.1 release. Native-device runtime acceptance is still pending.
+The three security suites cover authenticated messaging, signed groups and synchronization. The localization suite checks 92 security keys across eight languages. These commands passed for the 3.1.5 release. Native-device runtime acceptance is still pending.
 
 ## Cryptographic and synchronization coverage
 
@@ -69,9 +69,10 @@ legacy history remains readable with an explicit unsigned warning and no badge.
 Existing encrypted history whose sender key was already lost before this change
 cannot be recovered cryptographically.
 
-Every group participant's identity must first be established through the private
-password-authenticated handshake. No server-provided signing key is silently
-trusted. The group message signature covers group ID, sender ID, key epoch,
+Group authentication uses public keys published by the server and does not depend
+on the private password handshake. Live messages check current membership and
+epoch; historical or offline messages check the sender’s published account keys.
+New group sends omit text appearance encryption; legacy history still supports it. The group message signature covers group ID, sender ID, key epoch,
 client message ID, message type, identity/signing keys, nonce, nickname and
 ciphertext. Only successful signature verification produces a green message badge;
 missing decryption keys keep the content locked and eligible for retry. Badges are not loaded as trusted state from the plaintext message cache.
@@ -82,7 +83,7 @@ must cover exactly the current recipients, including an encrypted self copy,
 and each sender can publish only once per epoch. The same lock serializes sends
 and uploads against leave/kick/join. Online clients rotate on notification;
 offline clients discover the durable epoch when reconnecting and before sending.
-If an identity is unverified, sending remains blocked with a verification prompt.
+Sending fails if a member lacks published keys or if the sender’s published keys do not match the local keys.
 
 Historical distributions for continuing recipients are retained by epoch,
 including distributions authored by members who later leave. All distributions
@@ -126,8 +127,8 @@ of protocol constants and user-supplied text.
 
 ## Manual acceptance and boundaries
 
-Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Open the group member list to check refreshed trust, then exercise leave/kick, offline reconnect and pending-key recovery. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
+Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Send in a group with a member who has not completed private verification. Exercise leave/kick, offline reconnect and pending-key recovery. On the matching server, check one-sided friendship repair and contact refresh after adding or removing a friend. Check narrow portrait, landscape, and keyboard-open layouts. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
 
-Android 3.1.1 (30101) is published at [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.1), using immutable source tag `v3.1.1`. Automated client tests do not replace native-device acceptance or validate upstream Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
+The Android 3.1.5 (30105) release target is [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.5), using immutable source tag `v3.1.5`. Automated client tests do not replace native-device acceptance or validate upstream Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
 
 See the [main README](../README_EN.md), [中文说明](../README.md), and [F-Droid release guide](../fdroid/README.md). Deployment and server migration guidance is maintained in the [upstream repository](https://github.com/619dev/PaperPhoneLite). The client suites provide regression coverage with real cryptography and mocked transport/persistence; they are not an independent audit or native-device UI test.

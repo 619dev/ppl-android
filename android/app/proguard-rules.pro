@@ -19,3 +19,17 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Capacitor reads plugin annotations and dispatches methods by name.
+-keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations,AnnotationDefault
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
+-keep @com.getcapacitor.annotation.NativePlugin class * { *; }
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Tor and gomobile call into Java from native code using original names.
+-keep class org.torproject.** { *; }
+-keep class net.freehaven.tor.control.** { *; }
+-keep class IPtProxy.** { *; }
+-keep class go.** { *; }

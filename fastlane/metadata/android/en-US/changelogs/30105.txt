@@ -1,0 +1,1 @@
+Improved compact and landscape layouts and accessibility preferences. Manage friendships from user profiles. New group messages use signed Sender Keys; text appearance encryption applies to new private chats. Pair with the updated server for friendship repair. Release enables R8 and supports arm64-v8a.
