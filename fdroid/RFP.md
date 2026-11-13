@@ -37,9 +37,9 @@ Source ref: `v3.1.5` (the immutable release tag must resolve to the reviewed com
 
 Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.5
 
-Version-update MR: submit the 3.1.5 recipe against `fdroid/fdroiddata:master`.
+Version-update MR: [!57182](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/57182).
 
-Source commit: resolve the immutable `v3.1.5` tag. The recipe retains only 3.1.5 (30105).
+Source commit: resolve the immutable `v3.1.5` tag. The recipe adds 3.1.5 (30105) and preserves existing build entries.
 
 Independent F-Droid reproduction status is recorded in the version-update MR CI.
 

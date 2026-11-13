@@ -53,8 +53,8 @@ For 3.1.5 (2026-11-13):
   contains the signed `app-release.apk` and `SHA256SUMS`.
 - Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295)
   was merged; the original RFP is `fdroid/rfp#4291`.
-- The version-update recipe retains only 3.1.5 (`versionCode 30105`) with
-  source tag `v3.1.5`.
+- [Version-update MR !57182](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/57182) adds 3.1.5 (`versionCode 30105`) with
+  source tag `v3.1.5` and preserves existing build entries.
 - Consult MR CI for independent F-Droid reproduction; the local
   signature-copy check alone does not establish that reproduction.
 
@@ -73,8 +73,7 @@ Allowed signing certificate SHA-256:
 ## 5. Version updates after inclusion
 
 Use a version-update MR against `fdroid/fdroiddata:master`; do not open a new
-application request or modify the merged initial MR. Keep only the latest build
-entry in this project's submitted recipe. Preserve the allowed signing key,
+application request or modify the merged initial MR. Preserve existing build entries and append the new version. Preserve the allowed signing key,
 `Binaries` URL and narrowly scoped scanner exception unless an actual build
 change requires review.
 
@@ -86,7 +85,7 @@ Do not reopen a duplicate RFP for a version update.
 
 ## 7. Update fdroiddata
 
-1. Use fork `619dev/fdroiddata` and branch `codex/paperphonelite-3.1.5`.
+1. Use fork `619dev/fdroiddata` and branch `codex/paperphonelite-3.1.5-mr`.
 2. Start each new update branch from current `fdroid/fdroiddata:master`.
 3. Copy `fdroid/com.fm619.paperphonelite.yml` to
    `metadata/com.fm619.paperphonelite.yml` in that clone.

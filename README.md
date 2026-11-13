@@ -98,7 +98,7 @@ scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsign
 
 - [3.1.5 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.5)：包含签名 APK 和 `SHA256SUMS`。
 - 固定源码标签为 `v3.1.5`；上游客户端基线为 `2823996`。
-- 初次收录 [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) 已合并；3.1.5 通过独立的版本更新 MR 提交。元数据只保留 3.1.5（30105）。
+- 初次收录 [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) 已合并；[版本更新 MR !57182](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/57182) 保留现有构建条目，并追加 3.1.5（30105）。
 - 本版 F-Droid 独立构建和签名复制结果以版本更新 MR 的 CI 为准。
 - F-Droid 元数据启用了 `Binaries` 和允许的签名证书，用于验证可复现构建。跨渠道覆盖安装取决于最终 APK 证书是否相同，请先核对签名；本项目不发布到 Google Play。
 

@@ -98,7 +98,7 @@ The default keystore is `paperphone-release.keystore`; `PPL_RELEASE_KEYSTORE` ca
 
 - [Release 3.1.5](https://github.com/619dev/ppl-android/releases/tag/v3.1.5) includes the signed APK and `SHA256SUMS`.
 - The immutable source tag is `v3.1.5`; the upstream client baseline is `2823996`.
-- Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) was merged. The 3.1.5 update uses a separate version-update MR. Metadata retains only 3.1.5 (30105).
+- Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295) was merged. [Version-update MR !57182](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/57182) adds 3.1.5 (30105) and preserves existing build entries.
 - Consult the version-update MR for independent F-Droid build and signature reproduction results.
 - F-Droid metadata enables `Binaries` and the allowed signing certificate for reproducibility verification. In-place upgrades across channels depend on matching APK certificates; verify the final signatures first. This app is not published on Google Play.
 
