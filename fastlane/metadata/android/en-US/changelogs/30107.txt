@@ -1,0 +1,1 @@
+Adds offline media caching. With the 3.1.7 server, configure inactivity deletion, delete your account immediately, or reset your password with an authenticator code.

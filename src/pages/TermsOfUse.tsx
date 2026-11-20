@@ -19,7 +19,7 @@ export default function TermsOfUse() {
           <Shield size={36} /><h2>PaperPhoneLite</h2>
           <p>{zh ? '轻量级、Tor-only 的端到端加密通讯工具' : 'Lightweight, Tor-only, end-to-end encrypted messaging'}</p>
         </div>
-        <div className="privacy-updated">{zh ? '生效及更新日期：2026年8月18日' : 'Effective and updated: August 18, 2026'}</div>
+        <div className="privacy-updated">{zh ? '更新日期：2026年11月20日' : 'Updated November 20, 2026'}</div>
 
         <Section icon={<FileText size={20} />} title={zh ? '1. 条款适用与接受' : '1. Acceptance and Scope'}>
           <p>{zh
@@ -29,8 +29,8 @@ export default function TermsOfUse() {
 
         <Section icon={<Network size={20} />} title={zh ? '2. 服务与发行范围' : '2. Service and Distribution'}>
           <p>{zh
-            ? '本项目提供私聊、群聊、联系人、加密消息、语音消息、附件、消息同步、定时删除、二维码、两步验证和拉黑；Android 还可使用 ntfy 接收后台通知。不提供朋友圈、时间线、公开内容发布、举报审核后台、语音或视频通话。iOS 不使用 APNs，当前不提供系统后台远程通知；Android 与 iOS 均不集成 Apple 或 Google 推送服务。生产客户端必须内嵌 Tor，并仅连接由用户选择的 v3 .onion 服务地址。iOS 版本计划通过 Apple App Store 发布；Android APK 仅通过项目 GitHub Releases 发布，不通过 Google Play。'
-            : 'The project provides private and group chat, contacts, encrypted messaging, voice messages, attachments, synchronization, expiring messages, QR features, two-factor authentication, and blocking; Android can additionally use ntfy for background notifications. It provides no social feed, timeline, public publishing, report-review dashboard, or voice/video calling. iOS does not use APNs and currently provides no system background remote notifications; neither Android nor iOS integrates Apple or Google push services. Production clients must embed Tor and connect only to a user-selected v3 .onion server. iOS distribution is intended for the Apple App Store, while Android APKs are distributed only through the project’s GitHub Releases and not Google Play.'}</p>
+            ? '本项目提供私聊、群聊、联系人、加密消息、语音消息、附件、消息同步、定时删除、二维码、两步验证和拉黑；Android 还可使用 ntfy 接收后台通知。不提供朋友圈、时间线、公开内容发布、举报审核后台、语音或视频通话。iOS 不使用 APNs，当前不提供系统后台远程通知；Android 与 iOS 均不集成 Apple 或 Google 推送服务。生产客户端必须内嵌 Tor，并仅连接由用户选择的 v3 .onion 服务地址。iOS 版本计划通过 Apple App Store 发布；Android 可通过 F-Droid 或项目 GitHub Releases 获取，不通过 Google Play。'
+            : 'The project provides private and group chat, contacts, encrypted messaging, voice messages, attachments, synchronization, expiring messages, QR features, two-factor authentication, and blocking; Android can additionally use ntfy for background notifications. It provides no social feed, timeline, public publishing, report-review dashboard, or voice/video calling. iOS does not use APNs and currently provides no system background remote notifications; neither Android nor iOS integrates Apple or Google push services. Production clients must embed Tor and connect only to a user-selected v3 .onion server. iOS distribution is intended for the Apple App Store, while Android builds are available through F-Droid and the project’s GitHub Releases.'}</p>
         </Section>
 
         <Section icon={<Lock size={20} />} title={zh ? '3. 账号、密钥与安全责任' : '3. Accounts, Keys, and Security'}>
@@ -47,8 +47,8 @@ export default function TermsOfUse() {
 
         <Section icon={<Database size={20} />} title={zh ? '5. 数据、附件与删除' : '5. Data, Attachments, and Deletion'}>
           <p>{zh
-            ? '账号和路由所需元数据、加密消息、服务器端附件，以及用户启用的 ntfy 订阅会保存在所选服务器。项目不创建或保存 APNs 设备令牌。文件不使用 Cloudflare R2，而保存在服务器持久卷并由服务器传输。定时删除、退出登录、清理本地缓存或删除账号的效果受离线设备、备份、收件人副本和服务器运营方式限制，不构成对所有副本即时、不可恢复删除的保证。上传内容前请确认您拥有必要权利。'
-            : 'The selected server stores account and routing metadata, encrypted messages, server-side attachments, and user-enabled ntfy subscriptions. The project does not create or retain APNs device tokens. Files do not use Cloudflare R2; they remain on the server volume and are transferred by the server. Expiry, logout, cache clearing, or account deletion may be limited by offline devices, backups, recipient copies, and operator practices and does not guarantee immediate, irrecoverable deletion of every copy. Upload only content you have the right to use.'}</p>
+            ? '账号和路由所需元数据、加密消息、服务器端附件，以及用户启用的 ntfy 订阅会保存在所选服务器。项目不创建或保存 APNs 设备令牌。文件不使用 Cloudflare R2，而保存在服务器持久卷并由服务器传输。定时删除、退出登录、清理本地缓存或删除账号的效果受离线设备、备份、收件人副本和服务器运营方式限制，不构成对所有副本即时、不可恢复删除的保证。账号连续未登录达到所设期限后会自动删除，默认 12 个月。已启用双重验证的用户可用认证器验证码重置密码，重置后旧设备会话失效。上传内容前请确认您拥有必要权利。'
+            : 'The selected server stores account and routing metadata, encrypted messages, server-side attachments, and user-enabled ntfy subscriptions. The project does not create or retain APNs device tokens. Files do not use Cloudflare R2; they remain on the server volume and are transferred by the server. Expiry, logout, cache clearing, or account deletion may be limited by offline devices, backups, recipient copies, and operator practices and does not guarantee immediate, irrecoverable deletion of every copy. Accounts are automatically deleted after the selected period without signing in, which defaults to 12 months. Users with two-factor authentication enabled can reset their password with an authenticator code. A reset revokes existing device sessions. Upload only content you have the right to use.'}</p>
         </Section>
 
         <Section icon={<Shield size={20} />} title={zh ? '6. 开源、自托管与第三方服务' : '6. Open Source, Self-hosting, and Third Parties'}>

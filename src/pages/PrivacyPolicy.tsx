@@ -20,7 +20,7 @@ export default function PrivacyPolicy() {
           <h2 className="privacy-hero-title">PaperPhoneLite</h2>
           <p className="privacy-hero-subtitle">{zh ? '隐私声明' : 'Privacy Policy'}</p>
         </div>
-        <div className="privacy-updated">{zh ? '生效及更新日期：2026年8月18日' : 'Effective and updated: August 18, 2026'}</div>
+        <div className="privacy-updated">{zh ? '更新日期：2026年11月20日' : 'Updated November 20, 2026'}</div>
 
         <Section icon={<Eye size={20} />} title={zh ? '1. 适用范围与责任主体' : '1. Scope and Data Controller'}>
           <p>{zh
@@ -31,8 +31,8 @@ export default function PrivacyPolicy() {
         <Section icon={<Database size={20} />} title={zh ? '2. 我们处理的信息' : '2. Information Processed'}>
           <h4>{zh ? '账号与关系数据' : 'Account and relationship data'}</h4>
           <p>{zh
-            ? '用户名、昵称、密码哈希、头像、两步验证状态、好友关系、备注、标签、拉黑关系、群组、成员和邀请信息。注册不强制要求手机号或电子邮箱。'
-            : 'Username, nickname, password hash, avatar, two-factor status, friendships, remarks, tags, blocks, groups, memberships, and invitations. Registration does not require a phone number or email address.'}</p>
+            ? '用户名、昵称、密码哈希、头像、两步验证配置及密码重置验证记录、账号未登录期限、好友关系、备注、标签、拉黑关系、群组、成员和邀请信息。注册不强制要求手机号或电子邮箱。'
+            : 'Username, nickname, password hash, avatar, two-factor settings and password reset verification records, account inactivity period, friendships, remarks, tags, blocks, groups, memberships, and invitations. Registration does not require a phone number or email address.'}</p>
           <h4>{zh ? '通信和路由元数据' : 'Communication and routing metadata'}</h4>
           <p>{zh
             ? '发送方和接收方或群组标识、消息标识、类型、时间、投递/已读状态、客户端序号、自动删除设置、密钥版本，以及维持 WebSocket、同步和防重复投递所需的信息。项目没有朋友圈、时间线、公开帖子或举报审核数据。'
@@ -54,8 +54,8 @@ export default function PrivacyPolicy() {
 
         <Section icon={<Server size={20} />} title={zh ? '4. 文件与数据存储' : '4. Files and Data Storage'}>
           <p>{zh
-            ? '上传的图片、视频、语音和文档保存在您选择服务器的持久卷中，由 Rust 服务端传输，单文件上限为 500MB；本项目不使用 Cloudflare R2。客户端还会在 localStorage 和 IndexedDB 中保存登录状态、设置、本地密钥、联系人、群组、消息及媒体缓存。服务器运营者负责存储位置、备份、访问控制和保留期限。'
-            : 'Uploaded images, video, voice, and documents remain on the selected server’s persistent volume and are transferred by the Rust server, with a 500MB per-file limit; the project does not use Cloudflare R2. The client also stores login state, settings, local keys, contacts, groups, messages, and media cache in localStorage and IndexedDB. The server operator is responsible for storage location, backups, access control, and retention.'}</p>
+            ? '上传的图片、视频、语音和文档保存在您选择服务器的持久卷中，由 Rust 服务端传输，单文件上限为 500MB；本项目不使用 Cloudflare R2。客户端还会在 localStorage 和 IndexedDB 中保存登录状态、设置、本地密钥、联系人、群组及消息，并使用 Cache Storage 按账号缓存媒体。服务器运营者负责存储位置、备份、访问控制和保留期限。'
+            : 'Uploaded images, video, voice, and documents remain on the selected server’s persistent volume and are transferred by the Rust server, with a 500MB per-file limit; the project does not use Cloudflare R2. The client also stores login state, settings, local keys, contacts, groups, and messages in localStorage and IndexedDB, and caches media per account in Cache Storage. The server operator is responsible for storage location, backups, access control, and retention.'}</p>
         </Section>
 
         <Section icon={<Network size={20} />} title={zh ? '5. Tor 网络' : '5. Tor Network'}>
@@ -78,8 +78,8 @@ export default function PrivacyPolicy() {
 
         <Section icon={<Trash2 size={20} />} title={zh ? '8. 保留、删除与您的选择' : '8. Retention, Deletion, and Your Choices'}>
           <p>{zh
-            ? '消息可设置永不删除或在 1、3、7、30 天后自动删除。您可以清理本地缓存、撤销设备会话、拉黑用户或提交账号删除请求。账号删除会触发服务器数据库中的关联记录删除，但离线设备、接收方副本、已启用的 ntfy 服务记录和服务器备份可能按各自周期继续存在。删除前请自行导出或备份需要的数据。具体访问、更正、删除或异议权取决于适用法律，应联系所选服务器运营者。'
-            : 'Messages may be retained indefinitely or expire after 1, 3, 7, or 30 days. You may clear local cache, revoke device sessions, block users, or request account deletion. Account deletion triggers removal of related server database records, but offline devices, recipient copies, records held by an enabled ntfy service, and server backups may persist according to their own cycles. Export or back up anything needed before deletion. Rights of access, correction, deletion, or objection depend on applicable law and should be directed to the selected server operator.'}</p>
+            ? '消息可设置永不删除或在 1、3、7、30 天后自动删除。您可以清理本地缓存、撤销设备会话、拉黑用户或在个人信息页验证密码后立即删除账号。账号连续 3、6、12、24 或 36 个月未登录后会自动删除，默认 12 个月。成功登录会重新计时。账号删除会触发服务器数据库中的关联记录删除，但离线设备、接收方副本、已启用的 ntfy 服务记录和服务器备份可能按各自周期继续存在。删除前请自行导出或备份需要的数据。具体访问、更正、删除或异议权取决于适用法律，应联系所选服务器运营者。'
+            : 'Messages may be retained indefinitely or expire after 1, 3, 7, or 30 days. You may clear local cache, revoke device sessions, block users, or confirm immediate account deletion with your password in Profile. Accounts are automatically deleted after 3, 6, 12, 24, or 36 months without signing in, with a default of 12 months. A successful sign-in restarts the countdown. Account deletion triggers removal of related server database records, but offline devices, recipient copies, records held by an enabled ntfy service, and server backups may persist according to their own cycles. Export or back up anything needed before deletion. Rights of access, correction, deletion, or objection depend on applicable law and should be directed to the selected server operator.'}</p>
         </Section>
 
         <Section icon={<Baby size={20} />} title={zh ? '9. 未成年人' : '9. Children'}>

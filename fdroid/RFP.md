@@ -31,15 +31,13 @@ RepoType: git
 Repo: https://github.com/619dev/ppl-android.git
 ```
 
-Current release: `3.1.5` (`versionCode 30105`)
+Current Android release target is 3.1.7 (30107), with source tag `v3.1.7`
+and the signed APK distributed through [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.7).
 
-Source ref: `v3.1.5` (the immutable release tag must resolve to the reviewed commit)
-
-Release: https://github.com/619dev/ppl-android/releases/tag/v3.1.5
-
-Version-update MR: [!57182](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/57182).
-
-Source commit: resolve the immutable `v3.1.5` tag. The recipe adds 3.1.5 (30105) and preserves existing build entries.
+F-Droid tracks release tags automatically. The previous manual update
+[MR !57182](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/57182) is closed.
+The official recipe lists 3.1.5 and will receive the next build entry through
+the F-Droid update check.
 
 Independent F-Droid reproduction status is recorded in the version-update MR CI.
 
@@ -69,7 +67,7 @@ Description:
 > A compatible self-hosted server is required. The app does not include Google
 > Play services, Firebase, advertising, or analytics.
 
-Version 3.1.5 requires compatible clients and server, with signed Sender Key group messaging using server-published member keys.
+Version 3.1.7 requires compatible clients and server, with signed Sender Key group messaging using server-published member keys.
 Private password verification remains independent of group sending. The matching
 server repairs historical one-sided friendships at startup. See [release guidance](README.md) and the
 [client security boundaries](../README_EN.md#315-upgrade-and-security-boundaries).

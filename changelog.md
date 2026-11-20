@@ -4,6 +4,16 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.1.7 — 2026-11-20
+
+- 同步上游 Lite 前端 `cb0fe15`，增加媒体缓存、离线复用及重连再验证。
+- 配套 3.1.7 服务端支持闲置账号自动删除、密码确认后立即删除，以及使用验证器动态码重设密码。
+- 更新个人信息页及 Android 版本为 `3.1.7`（`30107`），保留原生 Tor 和 Lite 导航。
+
+- Synchronized upstream Lite client `cb0fe15` with persistent media caching, offline reuse, and reconnect revalidation.
+- The matching 3.1.7 server supports inactivity deletion, immediate password-confirmed deletion, and password recovery using an authenticator code.
+- Updated Profile and the Android package to `3.1.7` (`30107`), retaining native Tor and the Lite navigation.
+
 ## 3.1.5 — 2026-11-13
 
 - 改善窄屏、短屏和横屏布局、登录滚动及系统辅助显示设置。
