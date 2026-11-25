@@ -11,7 +11,7 @@ This directory is staging material. The final metadata file belongs in the
 2. Commit source, lockfile, Fastlane descriptions and version metadata. Exclude
    `node_modules`, `dist`, Android build outputs, `local.properties` and keystores.
 3. Build and validate the exact source revision before creating a release tag.
-   The release source tag is `v3.1.7`; never move a published tag. Future releases
+   The release source tag is `v3.1.8`; never move a published tag. Future releases
    require a new version/code and tag. Later documentation commits do not change
    the source used by this released APK.
 
@@ -48,13 +48,13 @@ fictional demo identities and content are acceptable.
 
 ## 4. Release and F-Droid status
 
-Android 3.1.7 uses version code 30107 and the source tag `v3.1.7`.
-The [GitHub Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.7)
+Android 3.1.8 uses version code 30108 and the source tag `v3.1.8`.
+The [GitHub Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.8)
 is the distribution location for `app-release.apk` and `SHA256SUMS`.
 
 Initial inclusion [MR !46295](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46295)
 was merged. The previous [MR !57182](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/57182)
-is closed, and the official metadata includes 3.1.5.
+is closed, and the official metadata includes 3.1.7.
 
 ## 5. Automatic version updates
 
@@ -74,7 +74,7 @@ refreshing the mirror. The original request is recorded in [RFP.md](RFP.md).
 When signing an unsigned Gradle APK for GitHub, use:
 
 ```sh
-scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.7/app-release.apk
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.8/app-release.apk
 ```
 
 Set `ANDROID_SDK_ROOT`, `KEYSTORE_PASSWORD` and `KEY_PASSWORD` in the local
@@ -91,9 +91,9 @@ file and the original unsigned APK match.
 To check signing layout locally, run from this repository's root:
 
 ```sh
-apksigcopier copy release/3.1.7/app-release.apk android/app/build/outputs/apk/release/app-release-unsigned.apk /tmp/ppl-signature-copy.apk
+apksigcopier copy release/3.1.8/app-release.apk android/app/build/outputs/apk/release/app-release-unsigned.apk /tmp/ppl-signature-copy.apk
 "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose /tmp/ppl-signature-copy.apk
-cmp release/3.1.7/app-release.apk /tmp/ppl-signature-copy.apk
+cmp release/3.1.8/app-release.apk /tmp/ppl-signature-copy.apk
 ```
 
 Repeat with the independent F-Droid unsigned artifact when available. Do not

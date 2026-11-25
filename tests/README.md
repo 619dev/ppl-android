@@ -12,7 +12,7 @@ cd android
 ./gradlew assembleRelease lintRelease
 ```
 
-The three security suites cover authenticated messaging, signed groups and synchronization. The localization suite checks 92 security keys across eight languages. These commands passed for the 3.1.5 release. Native-device runtime acceptance is still pending.
+The three security suites cover authenticated messaging, signed groups and synchronization. The localization suite checks 92 security keys across eight languages. Native-device runtime acceptance is still pending.
 
 ## Cryptographic and synchronization coverage
 
@@ -129,14 +129,20 @@ of protocol constants and user-supplied text.
 
 Use two compatible native clients to verify password setup/unlock, both directions of the handshake, profile refresh, focus/visibility refresh and changed-key rejection. Reopen profiles while verification is pending to confirm that challenges survive and retries are throttled. Send in a group with a member who has not completed private verification. Exercise leave/kick, offline reconnect and pending-key recovery. On the matching server, check one-sided friendship repair and contact refresh after adding or removing a friend. Check narrow portrait, landscape, and keyboard-open layouts. Check all eight languages, especially interpolated errors, verification prompts and the green badge's meaning.
 
-The Android 3.1.5 (30105) release target is [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.5), using immutable source tag `v3.1.5`. Automated client tests do not replace native-device acceptance or validate upstream Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
+The Android 3.1.8 (30108) release target is [GitHub Releases](https://github.com/619dev/ppl-android/releases/tag/v3.1.8), using immutable source tag `v3.1.8`. Automated client tests do not replace native-device acceptance or validate upstream Docker images. Local caches retain at most 2,000 messages per conversation; server-side auto-delete and attachment retention remain applicable. Message signing does not end-to-end encrypt uploaded file bytes, and no upgrade can recreate previously lost keys.
 
 For mobile layout checks, open login and chat at 320, 375, 393 and 440 CSS px, then rotate to landscape. Check safe-area padding, scrolling to the login controls and access to the composer. For friendship checks, accept and remove a contact from two connected clients and verify both lists after reconnect. Seed a one-sided accepted row and restart twice to check reciprocal repair and timer preservation.
 
-## 3.1.7 cache and account checks
+## Cache and account checks
 
 Run `npm run test:media-cache` to verify persistent cache reuse, offline fallback, concurrent download deduplication, reconnect refresh, and account isolation. The localization suite covers account deletion and password recovery in all eight languages.
 
 On an isolated installation with disposable accounts, verify the inactivity settings, immediate deletion, and deadline renewal after sign-in. Verify that refresh leaves the deadline unchanged. Check that a 2FA password reset revokes existing sessions, accepts each authenticator time step once, and limits failed attempts.
 
 See the [main README](../README_EN.md), [中文说明](../README.md), and [F-Droid release guide](../fdroid/README.md). Deployment and server migration guidance is maintained in the [upstream repository](https://github.com/619dev/PaperPhoneLite). The client suites provide regression coverage with real cryptography and mocked transport/persistence; they are not an independent audit or native-device UI test.
+
+## 3.1.8 shared frontend acceptance
+
+- Confirm the Profile footer reads `PaperPhoneLite v3.1.8`. Complete mutual verification and check the contact badge, signed group indicator, and pending-key and signature warning icons.
+- Open the emoji picker, send an emoji, locate it in Recent, and send a sticker.
+- Check the QR scanner and language picker. On Android, verify Tor still gates sign-in and password recovery.

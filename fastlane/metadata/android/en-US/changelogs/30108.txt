@@ -1,0 +1,1 @@
+Updates icons for chat controls, verification, group message status, QR scanning, and language selection.

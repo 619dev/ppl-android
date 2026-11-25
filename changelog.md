@@ -4,6 +4,14 @@
 
 This file records Android releases of `ppl-android` based on [619dev/PaperPhoneLite](https://github.com/619dev/PaperPhoneLite). The copied PaperPhonePlus Android 2.x history was removed because its LiveKit calling, Moments, Timeline, and Android-Keystore-cache descriptions do not apply to the current PaperPhoneLite 3.x client.
 
+## 3.1.8 — 2026-11-26
+
+- 同步上游 Lite 前端 `db9fb80`，统一聊天、身份验证、群消息状态、二维码及语言选择的图标。
+- 更新个人信息页及 Android 版本为 `3.1.8`（`30108`），保留聊天表情、最近使用的表情、贴纸及原生 Tor。
+
+- Synchronized upstream Lite frontend `db9fb80`, updating icons for chat, identity verification, group message status, QR scanning, and language selection.
+- Updated the Profile footer and Android package to `3.1.8` (`30108`), retaining emoji, recent emoji, stickers, and native Tor.
+
 ## 3.1.7 — 2026-11-20
 
 - 同步上游 Lite 前端 `cb0fe15`，增加媒体缓存、离线复用及重连再验证。

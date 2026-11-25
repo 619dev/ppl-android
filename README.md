@@ -5,7 +5,7 @@
 > [PaperPhoneLite](https://github.com/619dev/PaperPhoneLite) 的 Android 客户端，使用 Capacitor 8 打包上游 React/TypeScript 前端，并内嵌 Tor。
 
 [![Upstream](https://img.shields.io/badge/上游-619dev%2FPaperPhoneLite-blue?logo=github)](https://github.com/619dev/PaperPhoneLite)
-[![Version](https://img.shields.io/badge/版本-3.1.7-orange)](package.json)
+[![Version](https://img.shields.io/badge/版本-3.1.8-orange)](package.json)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 ## 项目范围
@@ -41,10 +41,10 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 ## 本地数据与密钥
 
 - 身份密钥、Sender Key 和身份信任记录使用按账号隔离的浏览器秘密存储，以不可导出的 WebCrypto AES-GCM 密钥加密后存入 IndexedDB；这不等同于 Android Keystore。会话、设置、消息缓存与离线数据使用 localStorage。
-- 消息缓存持久化前会移除已解密的明文字段，但当前 3.1.7 前端没有把整个聊天缓存交给 Android Keystore 加密。
+- 消息缓存持久化前会移除已解密的明文字段，但当前 3.1.8 前端没有把整个聊天缓存交给 Android Keystore 加密。
 - Android 系统备份已关闭，并明确排除云备份及设备迁移中的应用数据（包括 WebView 身份密钥和消息缓存）。
 - 启用“文本外观加密”后，应用启动会要求输入额外密码；错误或取消解锁时只显示文本外观密文。该功能不会替代设备锁或 Android Keystore。
-- 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.1.7 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
+- 仓库保留原生 `SecureStoragePlugin` 和 `KeepAwakePlugin` 兼容代码，但同步后的 3.1.8 前端不调用它们，不能将其描述为当前密钥或缓存的系统级保护。
 - 清理应用数据或卸载应用可能永久删除本地密钥及无法恢复的历史消息。
 
 ## Android 标识
@@ -53,8 +53,8 @@ ntfy 是 Android 唯一支持的可选后台通知方案。启用时，应用从
 |---|---|
 | 应用名称 | `PaperPhoneLite` |
 | Application ID | `com.fm619.paperphonelite` |
-| 版本 | `3.1.7` |
-| Version Code | `30107` |
+| 版本 | `3.1.8` |
+| Version Code | `30108` |
 | 最低 Android API | 24 |
 
 ## 构建
@@ -90,24 +90,26 @@ cd ..
 未签名产物为 `android/app/build/outputs/apk/release/app-release-unsigned.apk`。在本机私有环境中配置 `ANDROID_SDK_ROOT`、`KEYSTORE_PASSWORD` 和 `KEY_PASSWORD` 后执行：
 
 ```bash
-scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.7/app-release.apk
+scripts/sign-release.sh android/app/build/outputs/apk/release/app-release-unsigned.apk release/3.1.8/app-release.apk
 ```
 
 默认密钥库路径为 `paperphone-release.keystore`，可通过 `PPL_RELEASE_KEYSTORE` 指向外部私有文件。不要提交密钥库或密码。脚本使用 Build Tools 35.0.0，保留 ZIP 对齐并验证 v2/v3 签名。Release 仅支持 `arm64-v8a`，启用 R8，资源裁剪保持关闭。
 
 ## 当前发布与 F-Droid
 
-- [3.1.7 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.7)：包含签名 APK 和 `SHA256SUMS`。
-- 固定源码标签为 `v3.1.7`；上游客户端基线为 `cb0fe15`。
-- F-Droid 初次收录 MR !46295 已合并。GitLab 主库按 GitHub 版本标签自动发现更新，3.1.7 的入库状态以 F-Droid 为准。
+- [3.1.8 Release](https://github.com/619dev/ppl-android/releases/tag/v3.1.8)：包含签名 APK 和 `SHA256SUMS`。
+- 固定源码标签为 `v3.1.8`；上游客户端基线为 `db9fb80`。
+- F-Droid 初次收录 MR !46295 已合并。GitLab 主库按 GitHub 版本标签自动发现更新，3.1.8 的入库状态以 F-Droid 为准。
 - 独立构建和签名复制以 F-Droid 构建结果为准。
 - F-Droid 元数据启用了 `Binaries` 和允许的签名证书，用于验证可复现构建。跨渠道覆盖安装取决于最终 APK 证书是否相同，请先核对签名；本项目不发布到 Google Play。
 
 提交、签名与验证流程见 [`fdroid/README.md`](fdroid/README.md)，构建元数据见 [`fdroid/com.fm619.paperphonelite.yml`](fdroid/com.fm619.paperphonelite.yml)。
 
-## 3.1.7 升级与安全边界
+## 3.1.8 升级与安全边界
 
-配套 3.1.7 服务端默认在连续 12 个月未登录后删除账号。可在个人信息页设为 3、6、12、24 或 36 个月，也可验证密码后立即删除。成功登录会重新计时。已启用双重验证的账号可在登录页用验证器动态码重设密码，重设后现有会话会失效。
+同步共用前端的 Lucide 图标，覆盖聊天控件、身份验证、群消息状态、二维码扫描和语言选择。聊天保留表情、最近使用的表情及贴纸。
+
+3.1.7 起，服务端默认在连续 12 个月未登录后删除账号。可在个人信息页设为 3、6、12、24 或 36 个月，也可验证密码后立即删除。成功登录会重新计时。已启用双重验证的账号可在登录页用验证器动态码重设密码，重设后现有会话会失效。
 
 头像、贴纸和附件等媒体优先复用 WebView 本地缓存，联网后重新验证。个人信息页的清理缓存入口会清理离线数据及媒体缓存。
 
